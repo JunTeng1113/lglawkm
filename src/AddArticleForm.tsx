@@ -120,9 +120,10 @@ const BulkEdit: React.FC = () => {
   const handleInputChange = (targetId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     const newArticles = articles.map((article) => {
-      if (article.id === targetId) {
+      if (article.uuid === targetId) {
         let newValue: string | number = value;
         if (!isNaN(Number(value))) newValue = Number(value);
+        if (newValue === 0) newValue = '';
         return {
           ...article,
           [name]: newValue,
@@ -137,7 +138,22 @@ const BulkEdit: React.FC = () => {
   const handleAddRow = () => {
     setArticles([...articles, 
       { ...initialArticle,
-        // id: generateId(initialArticle), 
+        // 如果 編 不為空值 且 章 為空值 則 設定 編為 前項的編+1
+        code: (articles[articles.length - 1]?.code ?? 0) && !articles[articles.length - 1]?.chapter_id ? (articles[articles.length - 1]?.code ?? 0) + 1 : articles[articles.length - 1]?.code,
+        // 如果 章 不為空值 且 條 為空值 則 設定 章為 前項的章+1
+        chapter_id: (articles[articles.length - 1]?.chapter_id ?? 0) && !articles[articles.length - 1]?.article_id ? (articles[articles.length - 1]?.chapter_id ?? 0) + 1 : articles[articles.length - 1]?.chapter_id,
+        // 如果 條 不為空值 則 設定 條為 前項的條+1
+        article_id: (articles[articles.length - 1]?.article_id ?? 0) && !articles[articles.length - 1]?.section_id ? (articles[articles.length - 1]?.article_id ?? 0) + 1 : articles[articles.length - 1]?.article_id,
+        // 如果 條次 不為空值 則 設定 條次為 前項的條次+1
+        sub_article_id: (articles[articles.length - 1]?.sub_article_id ?? 0) && !articles[articles.length - 1]?.section_id ? (articles[articles.length - 1]?.sub_article_id ?? 0) + 1 : articles[articles.length - 1]?.sub_article_id,
+        // 如果 項 不為空值 則 設定 項為 前項的項+1
+        section_id: (articles[articles.length - 1]?.section_id ?? 0) && !articles[articles.length - 1]?.clause_id ? (articles[articles.length - 1]?.section_id ?? 0) + 1 : articles[articles.length - 1]?.section_id,
+        // 如果 款 不為空值 則 設定 款為 前項的款+1
+        clause_id: (articles[articles.length - 1]?.clause_id ?? 0) && !articles[articles.length - 1]?.item_id ? (articles[articles.length - 1]?.clause_id ?? 0) + 1 : articles[articles.length - 1]?.clause_id,
+        // 如果 目 不為空值 則 設定 目為 前項的目+1
+        item_id: (articles[articles.length - 1]?.item_id ?? 0) && !articles[articles.length - 1]?.sub_item_id ? (articles[articles.length - 1]?.item_id ?? 0) + 1 : articles[articles.length - 1]?.item_id,
+        // 如果 目之 不為空值 則 設定 目之為 前項的目之+1
+        sub_item_id: (articles[articles.length - 1]?.sub_item_id ?? undefined) && (articles[articles.length - 1]?.sub_item_id ?? 0) + 1,
         uuid: generateUUID(),
         law_number: selectedRegulation ?? 4999 // 4999作為錯誤值
       }]
@@ -173,8 +189,8 @@ const BulkEdit: React.FC = () => {
     }
   };
 
-  const handleUpdateRow = async (index: number, id: string) => {
-    const article = [articles[index]];
+  const handleUpdateRow = async (uuid: string) => {
+    const article = articles.find((article) => article.uuid === uuid);
     try {
       const response = await fetch('http://localhost:3000/api/bulk-update-articles', {
         method: 'POST',
@@ -285,7 +301,7 @@ const BulkEdit: React.FC = () => {
                   name="code"
                   className="bg-gray-50 border border -gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.code}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="編"
                 />
               </div>
@@ -297,7 +313,7 @@ const BulkEdit: React.FC = () => {
                   name="chapter_id"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.chapter_id}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="章"
                 />
               </div>
@@ -308,7 +324,7 @@ const BulkEdit: React.FC = () => {
                   name="article_id"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.article_id}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="條"
                 />
               </div>
@@ -320,7 +336,7 @@ const BulkEdit: React.FC = () => {
                   name="sub_article_id"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.sub_article_id}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="條之"
                 />
               </div>
@@ -332,7 +348,7 @@ const BulkEdit: React.FC = () => {
                   name="section_id"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.section_id}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="項"
                 />
               </div>
@@ -343,7 +359,7 @@ const BulkEdit: React.FC = () => {
                   name="clause_id"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.clause_id}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="款"
                 />
               </div>
@@ -355,7 +371,7 @@ const BulkEdit: React.FC = () => {
                   name="item_id"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.item_id}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="目"
                 />
               </div>
@@ -368,7 +384,7 @@ const BulkEdit: React.FC = () => {
                   name="sub_item_id"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.sub_item_id}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="目之○"
                 />
               </div>
@@ -380,7 +396,7 @@ const BulkEdit: React.FC = () => {
                   name="content"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.content}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="條文內容"
                 />
               </div>
@@ -391,7 +407,7 @@ const BulkEdit: React.FC = () => {
                   name="law_number"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
                   value={article.law_number}
-                  onChange={(e) => handleInputChange(article.id, e)}
+                  onChange={(e) => handleInputChange(article.uuid, e)}
                   placeholder="Law Number"
                   disabled
                 />
@@ -406,7 +422,7 @@ const BulkEdit: React.FC = () => {
               <button 
                 type="button"
                 className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                onClick={() => handleUpdateRow(index, article.id)}
+                onClick={() => handleUpdateRow(article.uuid)}
               >
                 Save
               </button>
