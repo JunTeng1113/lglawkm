@@ -73,7 +73,7 @@ const BulkEdit: React.FC = () => {
     const keys = ['code', 'chapter_id', 'article_id', 'sub_article_id', 'section_id', 'clause_id', 'item_id', 'sub_item_id'];
     const newSet = new Set<string>(); // Provide the correct type for the newSet variable
     
-    if (isFold) {
+    if (!isFold) {
       keys.forEach((key) => {
         if (!articles.some((article) => article[key as keyof Article])) {
           newSet.add(key);
@@ -207,7 +207,7 @@ const BulkEdit: React.FC = () => {
   };
 
   const handleUpdateRow = async (uuid: string) => {
-    const article = articles.find((article) => article.uuid === uuid);
+    const article = [articles.find((article) => article.uuid === uuid)];
     try {
       const response = await fetch('http://localhost:3000/api/bulk-update-articles', {
         method: 'POST',
@@ -246,7 +246,7 @@ const BulkEdit: React.FC = () => {
             ))}
           </select>
           <button type="button" onClick={handleFold} className="mb-4 bg-green-500 text-white px-4 py-2 rounded">
-            {isFold ? '摺疊內容' : '展開內容'}
+            {isFold ? '展開內容' : '摺疊內容'}
           </button>
         </div>
         
