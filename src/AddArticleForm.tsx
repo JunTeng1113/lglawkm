@@ -75,13 +75,11 @@ const BulkEdit: React.FC = () => {
     
     if (isFold) {
       keys.forEach((key) => {
-        if (articles.some((article) => article[key as keyof Article])) {
+        if (!articles.some((article) => article[key as keyof Article])) {
           newSet.add(key);
         }
       });
-    } else {
-      keys.forEach((key) => newSet.add(key));
-    }
+    } 
 
     setFoldSet(newSet);
     setIsFold(isFold => !isFold);
@@ -257,42 +255,42 @@ const BulkEdit: React.FC = () => {
             <div className='w-20'>
               <label>永久編號</label>
             </div>
-            {foldSet.has('code') && (
+            {!foldSet.has('code') && (
               <div className='w-12'>
                 <label>編</label>
               </div>
             )}
-            {foldSet.has('chapter_id') && (
+            {!foldSet.has('chapter_id') && (
             <div className='w-12'>
               <label>章</label>
             </div>
             )}
-            {foldSet.has('article_id') && (
+            {!foldSet.has('article_id') && (
             <div className='w-12'>
               <label>條</label>
             </div>
             )}
-            {foldSet.has('sub_article_id') && (
+            {!foldSet.has('sub_article_id') && (
               <div className='w-12'>
                 <label>條之</label>
               </div>
             )}
-            {foldSet.has('section_id') && (
+            {!foldSet.has('section_id') && (
               <div className='w-12'>
                 <label>項</label>
               </div>
             )}
-            {foldSet.has('clause_id') && (
+            {!foldSet.has('clause_id') && (
               <div className='w-12'>
                 <label>款</label>
               </div>
             )}
-            {foldSet.has('item_id') && (
+            {!foldSet.has('item_id') && (
               <div className='w-12'>
                 <label>目</label>
               </div>
             )}
-            {foldSet.has('sub_item_id') && (
+            {!foldSet.has('sub_item_id') && (
               <div className='w-12'>
                 <label>目之</label>
               </div>
@@ -320,7 +318,7 @@ const BulkEdit: React.FC = () => {
                   disabled
                 />
               </div>
-              {foldSet.has('code') && (
+              {!foldSet.has('code') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -333,7 +331,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
-              {foldSet.has('chapter_id') && (
+              {!foldSet.has('chapter_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -346,7 +344,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
-              {foldSet.has('article_id') && (
+              {!foldSet.has('article_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -359,7 +357,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
-              {foldSet.has('sub_article_id') && (
+              {!foldSet.has('sub_article_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -372,7 +370,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
-              {foldSet.has('section_id') && (
+              {!foldSet.has('section_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -385,7 +383,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
-              {foldSet.has('clause_id') && (
+              {!foldSet.has('clause_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -398,7 +396,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
-              {foldSet.has('item_id') && (
+              {!foldSet.has('item_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -411,7 +409,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
-              {foldSet.has('sub_item_id') && (
+              {!foldSet.has('sub_item_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
