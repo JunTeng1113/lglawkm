@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
-interface Law {
+interface Article {
   id: number;
   code: string;
   chapter_id: number;
@@ -14,10 +14,16 @@ interface Law {
   law_number: number;
 }
 
+interface Regulation {
+  regulation_number: number;
+  regulation_name: string;
+  articles: Article[];
+}
+
 function SelectLaw() {
   const [select_law, setSelectLaw] = useState<number>(0);
-  const [articles, setArticles] = useState<Law[]>([]);
-  const [regulationName, setRegulationName] = useState<string>('');
+  const [articles, setArticles] = useState<Article[]>([]);
+  const [Regulation, setRegulation] = useState<Regulation[]>([]);
   const [chaptersToShow, setChaptersToShow] = useState<Set<number>>(new Set());
   const [searchKeyword, setSearchKeyword] = useState<string>('');
 
@@ -26,20 +32,20 @@ function SelectLaw() {
       // Fetch the regulation name for law_number 0
       const regResponse = await fetch('http://localhost:3000/api/regulations');
       const regResult = await regResponse.json();
+      setRegulation(regResult);
       // Filter articles to include only those with law_number 0
-      const filteredArticles = regResult.articles.filter((article: Law) => {
-        return article.content.includes(searchKeyword);
-      });
-      setArticles(filteredArticles);
-      setRegulationName(regResult.regulation_name);
+      // const filteredArticles = regResult.articles.filter((article: Article) => {
+      //   return article.content.includes(searchKeyword);
+      // });
+      // setArticles(filteredArticles);
 
       // Calculate which chapters should be shown
-      const chapters = new Set<number>();
-      filteredArticles.forEach((article: Law) => {
-        chapters.add(article.chapter_id);
-      });
+      // const chapters = new Set<number>();
+      // filteredArticles.forEach((article: Article) => {
+      //   chapters.add(article.chapter_id);
+      // });
 
-      setChaptersToShow(chapters);
+      // setChaptersToShow(chapters);
     } catch (error) {
       console.error('Error fetching articles:', error);
       // Handle the error here, e.g. show an error message to the user
@@ -55,26 +61,50 @@ function SelectLaw() {
   const displayedSections = new Set<number|null>();
 
   return (
-    <div className='mx-12'>
-      <input
-        type='number'
-        value={select_law}
-        onChange={(e) => setSelectLaw(parseInt(e.target.value))}
-      />
-      <input
-        type='text'
-        value={searchKeyword}
-        onChange={(e) => setSearchKeyword(e.target.value)}
-      />
-      <button onClick={fetchArticles}>搜尋</button>
-      {articles ? (
-        <>
-          <h1>{regulationName}</h1>
-          {articles.map((article) => {
-            // Check if the chapter has already been displayed
-            const showChapterTitle = !displayedChapters.has(article.chapter_id);
-            const showArticle = !displayedArticles.has(article.article_id);
-            const showSection = !displayedSections.has(article.article_id * 10 + (article.section_id ? article.section_id : 0));
+    <div className='mx-12 my-4'>
+      <div className='flex justify-center'> 
+        <form className="w-96 max-w-md">   
+            <label htmlFor="default-search" className="mb-2 text-sm font-medium text-gray-900 sr-only dark:text-white">Search</label>
+            <div className="relative">
+                <div className="absolute inset-y-0 start-0 flex items-center ps-3 pointer-events-none">
+                    <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 20 20">
+                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="m19 19-4-4m0-7A7 7 0 1 1 1 8a7 7 0 0 1 14 0Z"/>
+                    </svg>
+                </div>
+                <input type="search" id="default-search" 
+                  value={searchKeyword}
+                  onChange={(e) => setSearchKeyword(e.target.value)}
+                  className="block w-full p-4 ps-10 text-sm text-gray-900 border border-gray-300 rounded-lg bg-gray-50 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500" placeholder="Search Mockups, Logos..."
+                  />
+                <button type="submit" onClick={fetchArticles} className="text-white absolute end-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">搜尋</button>
+            </div>
+        </form>
+        {Regulation ? (
+          <select
+          value={select_law}
+          onChange={(e) => setSelectLaw(parseInt(e.target.value))}
+          className='w-96 ml-4'
+          >
+            {Regulation.map((reg) => (
+              <option key={reg.regulation_number} value={reg.regulation_number}>
+                {reg.regulation_name}
+              </option>
+            ))}
+          </select>
+        ) : null
+      }
+    </div>
+
+      {Regulation.filter((reg) => reg.regulation_number === select_law).map((reg) => (
+        <div 
+        key={reg.regulation_number}
+        className='w-[800px] mx-auto'
+        >
+          <h1>{reg.regulation_name}</h1>
+          {reg.articles.map((article) => {
+            const showChapterTitle = !displayedChapters.has(article.chapter_id) && article.chapter_id !== null;
+            const showArticle = !displayedArticles.has(article.article_id) && article.article_id !== null;
+            const showSection = !displayedSections.has(article.article_id * 10 + (article.section_id ? article.section_id : 0)) && article.section_id !== null;
 
             if (showChapterTitle) {
               displayedChapters.add(article.chapter_id);
@@ -89,21 +119,23 @@ function SelectLaw() {
             }
 
             return (
-              <div key={article.id}>
+              <div
+                key={article.id}
+                className='flex flex-col'
+              >
                 {showChapterTitle && <div className='font-black'>第 {article.chapter_id} 章</div>}
-                <div className='flex'>
-                  <div className='w-20 text-right mr-4'>{showArticle && (`第 ${article.article_id}` + (article.sub_article_id !== null ? `-${article.sub_article_id}` : '') + ` 條`)}</div>
-                  <div className='flex'>
-                    <div className='w-4'>{showSection && article.section_id}</div>
-                    <div className='w-[480px]'>{article.content}</div>
+                <div className='flex justify-center'>
+                  <div className='flex-none w-24 text-right mr-4'>{showArticle && (`第 ${article.article_id}` + (article.sub_article_id ? `-${article.sub_article_id}` : '') + ` 條`)}</div>
+                  <div className='grow flex'>
+                    <div className='min-w-4'>{showSection && article.section_id}</div>
+                    <div className='text-pretty'>{article.content}</div>
                   </div>
                 </div>
                 <br />
               </div>
-            );
-          })}
-        </>
-      ) : null }
+          )})}
+        </div>
+      ))}
     </div>
   );
 };

@@ -14,14 +14,24 @@ router.get('/regulations', (req, res) => {
 
   if (lawNumber === undefined) {
     // Fetch all regulations
-    db.all('SELECT * FROM constitution_articles', (err, articles) => {
+    db.all('SELECT * FROM constitution_articles, regulations WHERE constitution_articles.law_number = regulations.regulation_number', (err, articles) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
-      res.json({
-        articles: articles
-      });
+      res.json(articles.reduce((acc, article) => {
+        const regulation = acc.find((regulation) => regulation.regulation_number === article.law_number);
+        if (regulation) {
+          regulation.articles.push(article);
+        } else {
+          acc.push({
+            regulation_number: article.law_number,
+            regulation_name: article.regulation_name,
+            articles: [article]
+          });
+        }
+        return acc;
+      }, []));
     });
   } else {
     // Fetch regulation details

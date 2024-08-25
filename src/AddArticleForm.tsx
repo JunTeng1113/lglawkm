@@ -1,138 +1,416 @@
-import React, { useState } from 'react';
+// pages/BulkEdit.tsx
+import React, { useState, useEffect } from 'react';
 
-const customFieldNames: { [key: string]: string } = {
-  id: '永久編號',
-  code: '編號',
-  chapter_id: '章節號',
-  article_id: '條次',
-  sub_article_id: '條次號',
-  section_id: '款次',
-  clause_id: '項次',
-  item_id: '目次',
-  sub_item_id: '目次號',
-  content: '內容',
-  law_number: '法律編號',
+interface Article {
+  uuid: string;
+  code?:  number;
+  chapter_id?: number;
+  article_id?: number;
+  sub_article_id?:  number;
+  section_id?:  number;
+  clause_id?:  number;
+  item_id?:  number;
+  sub_item_id?:  number
+  content: string;
+  law_number?:  number;
+  id: string;
 };
 
-function BulkAddArticleForm() {
-  const initialArticle = {
-    id: '',
-    code: '',
-    chapter_id: '',
-    article_id: '',
-    sub_article_id: '',
-    section_id: '',
-    clause_id: '',
-    item_id: '',
-    sub_item_id: '',
-    content: '',
-    law_number: '',
-  };
-  const digits: { [key: string]: number } = {
-    law_number: 3,
-    code: 2,
-    chapter_id: 2,
-    article_id: 3,
-    sub_article_id: 2,
-    section_id: 2,
-    clause_id: 2,
-    item_id: 2,
-    sub_item_id: 2,
+interface Regulation {
+  regulation_number: number;
+  regulation_name: string;
+  authority: string;
+}
+
+const initialArticle: Article = {
+  uuid: '',
+  code: undefined,
+  chapter_id: undefined,
+  article_id: undefined,
+  sub_article_id: undefined,
+  section_id: undefined,
+  clause_id: undefined,
+  item_id: undefined,
+  sub_item_id: undefined,
+  content: '',
+  law_number: undefined,
+  id: '',
+};
+
+const digits: { [key: string]: number } = {
+  law_number: 3,
+  code: 2,
+  chapter_id: 2,
+  article_id: 3,
+  sub_article_id: 2,
+  section_id: 2,
+  clause_id: 2,
+  item_id: 2,
+  sub_item_id: 2,
+}
+
+const BulkEdit: React.FC = () => {
+  const [regulations, setRegulations] = useState<Regulation[]>([]);
+  const [selectedRegulation, setSelectedRegulation] = useState<number | null>(null);
+  const [isExpanded, setIsExpanded] = useState<boolean>(false); // State for collapsible content
+  const [articles, setArticles] = useState<Article[]>([initialArticle as Article]);
+
+  function generateUUID() {
+    var d = new Date().getTime();
+    if (typeof performance !== 'undefined' && typeof performance.now === 'function'){
+        d += performance.now(); //use high-precision timer if available
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = (d + Math.random() * 16) % 16 | 0;
+        d = Math.floor(d / 16);
+        return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+    });
   }
 
-  const [articles, setArticles] = useState<{ [key: string]: string }[]>([initialArticle]);
 
-  const generateId = (article: { [key: string]: string }) => {
+  const generateId = (article: Article) => {
     const fields = [
-      article.law_number.padStart(digits['law_number'], '0'),
-      article.code.padStart(digits['code'], '0'),
-      article.chapter_id.padStart(digits['chapter_id'], '0'),
-      article.article_id.padStart(digits['article_id'], '0'),
-      article.sub_article_id.padStart(digits['sub_article_id'], '0'),
-      article.section_id.padStart(digits['section_id'], '0'),
-      article.clause_id.padStart(digits['clause_id'], '0'),
-      article.item_id.padStart(digits['item_id'], '0'),
-      article.sub_item_id.padStart(digits['sub_item_id'], '0'),
+      String(article.law_number ?? 0).padStart(digits['law_number'], '0'),
+      String(article.code ?? 0).padStart(digits['code'], '0'),
+      String(article.chapter_id ?? 0).padStart(digits['chapter_id'], '0'),
+      String(article.article_id ?? 0).padStart(digits['article_id'], '0'),
+      String(article.sub_article_id ?? 0).padStart(digits['sub_article_id'], '0'),
+      String(article.section_id ?? 0).padStart(digits['section_id'], '0'),
+      String(article.clause_id ?? 0).padStart(digits['clause_id'], '0'),
+      String(article.item_id ?? 0).padStart(digits['item_id'], '0'),
+      String(article.sub_item_id ?? 0).padStart(digits['sub_item_id'], '0'),
     ];
     const paddedFields = fields.map((field) => field || '0'.repeat(digits[field as keyof typeof digits]));
     return 'A' + paddedFields.join('');
   };
 
-  const handleInputChange = (index: number, e: any) => {
+  useEffect(() => {
+    // Fetch regulations for selection
+    async function fetchRegulations() {
+      try {
+        const response = await fetch('http://localhost:3000/api/regulations');
+        const data = await response.json();
+        setRegulations(data);
+      } catch (error) {
+        console.error('Error fetching regulations:', error);
+      }
+    }
+
+    fetchRegulations();
+  }, []);
+
+  useEffect(() => {
+    // Fetch articles when a regulation is selected
+    async function fetchArticles() {
+      if (selectedRegulation !== null) {
+        try {
+          const response = await fetch(`http://localhost:3000/api/regulations?law_number=${selectedRegulation}`);
+          const data = await response.json();
+          
+          setArticles(data.articles);
+        } catch (error) {
+          console.error('Error fetching articles:', error);
+        }
+      }
+    }
+
+    fetchArticles();
+  }, [selectedRegulation]);
+
+  const handleInputChange = (targetId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const newArticles = [...articles];
-    newArticles[index][name] = value;
-    newArticles[index].id = generateId(newArticles[index]);
+    const newArticles = articles.map((article) => {
+      if (article.id === targetId) {
+        let newValue: string | number = value;
+        if (!isNaN(Number(value))) newValue = Number(value);
+        return {
+          ...article,
+          [name]: newValue,
+          id: generateId(article),
+        };
+      }
+      return article;
+    });
     setArticles(newArticles);
   };
 
   const handleAddRow = () => {
-    setArticles([
-      ...articles,
-      {...initialArticle, id: generateId(initialArticle)},
-    ]);
+    setArticles([...articles, 
+      { ...initialArticle,
+        // id: generateId(initialArticle), 
+        uuid: generateUUID(),
+        law_number: selectedRegulation ?? 4999 // 4999作為錯誤值
+      }]
+    );
   };
 
-  const handleRemoveRow = (index: number) => {
+  const handleRemoveRow = async (index: number, uuid: string) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this article?');
+    if (!confirmDelete) {
+      return;
+    }
+
     const newArticles = [...articles];
     newArticles.splice(index, 1);
     setArticles(newArticles);
-  };
-
-  const handleSubmit = async (e: any) => {
-    e.preventDefault();
 
     try {
-      const response = await fetch('http://localhost:3000/api/bulk-add-articles', {
+      const response = await fetch(`http://localhost:3000/api/delete-article`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(articles),
+        body: JSON.stringify({ uuid: uuid ?? undefined }),
       });
 
       if (response.ok) {
-        alert('Articles added successfully!');
-        setArticles([initialArticle]);
+        alert('Article deleted successfully!');
       } else {
-        alert('Failed to add articles.');
+        alert('Failed to delete article.');
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('Error deleting article:', error);
     }
   };
 
+  const handleUpdateRow = async (index: number, id: string) => {
+    const article = [articles[index]];
+    try {
+      const response = await fetch('http://localhost:3000/api/bulk-update-articles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(article),
+      });
+
+      if (response.ok) {
+        alert('Article updated successfully!');
+      } else {
+        alert('Failed to update article.');
+      }
+    } catch (error) {
+      console.error('Error updating article:', error);
+    }
+  }
+
   return (
-    <div className=" mx-auto p-4">
-      <h2 className="text-2xl font-bold mb-4">Bulk Add New Articles</h2>
-      <form onSubmit={handleSubmit}>
-        {articles.map((article, index) => (
-          <div key={index} className="mb-6 border-b pb-4">
-            <div className="grid grid-cols-11 gap-4">
-              {Object.keys(article).map((key) => (
-                <div key={key} className="mb-4">
-                  <label className="block text-gray-700 mb-2 capitalize" htmlFor={`${key}-${index}`}>
-                  {customFieldNames[key]}
-                  </label>
-                  <input
-                    className="w-full px-3 py-2 border rounded-md"
-                    type="text"
-                    id={`${key}-${index}`}
-                    name={key}
-                    value={article[key]}
-                    onChange={(e) => handleInputChange(index, e)}
-                    maxLength={digits[key]} // Set maxLength based on the digits object
-                  />
-                </div>
-              ))}
+    <div className='m-4'>
+      <h1>批量編輯</h1>
+      <form>
+        <div className="mb-4">
+          <label htmlFor="regulation-select">選擇法規:</label>
+          <select
+            id="regulation-select"
+            value={selectedRegulation ?? ''}
+            onChange={(e) => setSelectedRegulation(Number(e.target.value))}
+          >
+            <option value="" disabled>選擇法規</option>
+            {regulations.map((regulation) => (
+              <option key={regulation.regulation_number} value={regulation.regulation_number}>
+                {regulation.regulation_name}
+              </option>
+            ))}
+          </select>
+          <button type="button" onClick={() => setIsExpanded(!isExpanded)} className="mb-4 bg-green-500 text-white px-4 py-2 rounded">
+            {isExpanded ? '折叠内容' : '展开内容'}
+          </button>
+        </div>
+        
+        <div className="mb-4 border-b pb-4">
+          <div className="flex gap-1">
+            <div className='w-20'>
+              <label>永久編號</label>
             </div>
-            <button
-              type="button"
-              className="bg-red-500 text-white px-4 py-2 rounded-md"
-              onClick={() => handleRemoveRow(index)}
-            >
-              Remove
-            </button>
+            {isExpanded && (
+              <div className='w-12'>
+                <label>編</label>
+              </div>
+            )}
+            <div className='w-12'>
+              <label>章</label>
+            </div>
+            <div className='w-12'>
+              <label>條</label>
+            </div>
+            {isExpanded && (
+              <div className='w-12'>
+                <label>條之</label>
+              </div>
+            )}
+            <div className='w-12'>
+              <label>項</label>
+            </div>
+            <div className='w-12'>
+              <label>款</label>
+            </div>
+            {isExpanded && (
+              <div className='w-12'>
+                <label>目</label>
+              </div>
+            )}
+            {isExpanded && (
+              <div className='w-12'>
+                <label>目之</label>
+              </div>
+            )}
+            <div className='w-[800px]'>
+              <label>條文內容</label>
+            </div> 
+            <div className='w-20'>
+              <label>法律編號</label>
+            </div>
+          </div>
+        </div>
+
+        {articles.map((article, index) => (
+          <div key={index} className="border-b ">
+            <div className="flex gap-1">
+              <div className='w-20'>
+                <input 
+                  type="text" 
+                  id="id"
+                  name="id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.uuid}
+                  placeholder="UUID"
+                  disabled
+                />
+              </div>
+              {isExpanded && (
+              <div className='w-12'>
+                <input 
+                  type="number" 
+                  id="code" 
+                  name="code"
+                  className="bg-gray-50 border border -gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.code}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="編"
+                />
+              </div>
+              )}
+              <div className='w-12'>
+                <input 
+                  type="number" 
+                  id="chapter_id"
+                  name="chapter_id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.chapter_id}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="章"
+                />
+              </div>
+              <div className='w-12'>
+                <input 
+                  type="number" 
+                  id="article_id" 
+                  name="article_id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.article_id}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="條"
+                />
+              </div>
+              {isExpanded && (
+              <div className='w-12'>
+                <input 
+                  type="number" 
+                  id="sub_article_id" 
+                  name="sub_article_id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.sub_article_id}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="條之"
+                />
+              </div>
+              )}
+              <div className='w-12'>
+                <input 
+                  type="number" 
+                  id="section_id" 
+                  name="section_id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.section_id}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="項"
+                />
+              </div>
+              <div className='w-12'>
+                <input 
+                  type="number" 
+                  id="clause_id" 
+                  name="clause_id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.clause_id}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="款"
+                />
+              </div>
+              {isExpanded && (
+              <div className='w-12'>
+                <input 
+                  type="number" 
+                  id="item_id" 
+                  name="item_id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.item_id}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="目"
+                />
+              </div>
+              )}
+              {isExpanded && (
+              <div className='w-12'>
+                <input 
+                  type="number" 
+                  id="sub_item_id" 
+                  name="sub_item_id"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.sub_item_id}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="目之○"
+                />
+              </div>
+              )}
+              <div className='w-[800px]'>
+                <input
+                  type="text"
+                  id="content"
+                  name="content"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.content}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="條文內容"
+                />
+              </div>
+              <div className='w-20'>
+                <input
+                  type="number"
+                  id="law_number"
+                  name="law_number"
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                  value={article.law_number}
+                  onChange={(e) => handleInputChange(article.id, e)}
+                  placeholder="Law Number"
+                  disabled
+                />
+              </div>
+              <button
+                type="button"
+                className="bg-red-500 text-white px-4 py-2 rounded-md"
+                onClick={() => handleRemoveRow(index, article.uuid)}
+                >
+                Remove Row
+              </button>
+              <button 
+                type="button"
+                className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                onClick={() => handleUpdateRow(index, article.id)}
+              >
+                Save
+              </button>
+            </div>
           </div>
         ))}
         <button
@@ -140,17 +418,11 @@ function BulkAddArticleForm() {
           className="bg-green-500 text-white px-4 py-2 rounded-md mb-4"
           onClick={handleAddRow}
         >
-          Add Another Article
-        </button>
-        <button
-          className="bg-blue-500 text-white px-4 py-2 rounded-md"
-          type="submit"
-        >
-          Submit All Articles
+          Add Another Row
         </button>
       </form>
     </div>
   );
-}
+};
 
-export default BulkAddArticleForm;
+export default BulkEdit;
