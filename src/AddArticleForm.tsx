@@ -55,6 +55,7 @@ const BulkEdit: React.FC = () => {
   const [isFold, setIsFold] = useState<Boolean>(false); // State for collapsible content
   const [foldSet, setFoldSet] = useState<Set<string>>(new Set()); // State for collapsible content
   const [articles, setArticles] = useState<Article[]>([initialArticle as Article]);
+  const [tempArticles, setTempArticles] = useState<Article[]>([]);
 
   function generateUUID() {
     var d = new Date().getTime();
@@ -75,7 +76,7 @@ const BulkEdit: React.FC = () => {
     
     if (!isFold) {
       keys.forEach((key) => {
-        if (!articles.some((article) => article[key as keyof Article])) {
+        if (!tempArticles.some((article) => article[key as keyof Article])) {
           newSet.add(key);
         }
       });
@@ -116,27 +117,31 @@ const BulkEdit: React.FC = () => {
     fetchRegulations();
   }, []);
 
-  useEffect(() => {
-    // Fetch articles when a regulation is selected
-    async function fetchArticles() {
-      if (selectedRegulation !== null) {
-        try {
-          const response = await fetch(`http://localhost:3000/api/regulations?law_number=${selectedRegulation}`);
-          const data = await response.json();
-          
-          setArticles(data.articles);
-        } catch (error) {
-          console.error('Error fetching articles:', error);
-        }
+  // Fetch Articles when a regulation is selected
+  async function fetchArticles() {
+    if (selectedRegulation !== null) {
+      try {
+        const response = await fetch(`http://localhost:3000/api/regulations?law_number=${selectedRegulation}`);
+        const data = await response.json();
+        
+        setArticles(data.articles);
+      } catch (error) {
+        console.error('Error fetching Articles:', error);
       }
     }
+  }
 
+  useEffect(() => {
     fetchArticles();
   }, [selectedRegulation]);
 
+  useEffect(() => {
+    setTempArticles(articles);
+  }, [articles]);
+
   const handleInputChange = (targetId: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    const newArticles = articles.map((article) => {
+    const newArticles = tempArticles.map((article) => {
       if (article.uuid === targetId) {
         let newValue: string | number = value;
         if (!isNaN(Number(value))) newValue = Number(value);
@@ -144,36 +149,37 @@ const BulkEdit: React.FC = () => {
         return {
           ...article,
           [name]: newValue,
-          id: generateId(article),
+          // id: generateId(article),
         };
       }
       return article;
     });
-    setArticles(newArticles);
+    setTempArticles(newArticles);
   };
 
   const handleAddRow = () => {
-    setArticles([...articles, 
-      { ...initialArticle,
-        // 如果 編 不為空值 且 章 為空值 則 設定 編為 前項的編+1
-        code: (articles[articles.length - 1]?.code ?? 0) && !articles[articles.length - 1]?.chapter_id ? (articles[articles.length - 1]?.code ?? 0) + 1 : articles[articles.length - 1]?.code,
-        // 如果 章 不為空值 且 條 為空值 則 設定 章為 前項的章+1
-        chapter_id: (articles[articles.length - 1]?.chapter_id ?? 0) && !articles[articles.length - 1]?.article_id ? (articles[articles.length - 1]?.chapter_id ?? 0) + 1 : articles[articles.length - 1]?.chapter_id,
-        // 如果 條 不為空值 則 設定 條為 前項的條+1
-        article_id: (articles[articles.length - 1]?.article_id ?? 0) && !articles[articles.length - 1]?.section_id ? (articles[articles.length - 1]?.article_id ?? 0) + 1 : articles[articles.length - 1]?.article_id,
-        // 如果 條次 不為空值 則 設定 條次為 前項的條次+1
-        sub_article_id: (articles[articles.length - 1]?.sub_article_id ?? 0) && !articles[articles.length - 1]?.section_id ? (articles[articles.length - 1]?.sub_article_id ?? 0) + 1 : articles[articles.length - 1]?.sub_article_id,
-        // 如果 項 不為空值 則 設定 項為 前項的項+1
-        section_id: (articles[articles.length - 1]?.section_id ?? 0) && !articles[articles.length - 1]?.clause_id ? (articles[articles.length - 1]?.section_id ?? 0) + 1 : articles[articles.length - 1]?.section_id,
-        // 如果 款 不為空值 則 設定 款為 前項的款+1
-        clause_id: (articles[articles.length - 1]?.clause_id ?? 0) && !articles[articles.length - 1]?.item_id ? (articles[articles.length - 1]?.clause_id ?? 0) + 1 : articles[articles.length - 1]?.clause_id,
-        // 如果 目 不為空值 則 設定 目為 前項的目+1
-        item_id: (articles[articles.length - 1]?.item_id ?? 0) && !articles[articles.length - 1]?.sub_item_id ? (articles[articles.length - 1]?.item_id ?? 0) + 1 : articles[articles.length - 1]?.item_id,
-        // 如果 目之 不為空值 則 設定 目之為 前項的目之+1
-        sub_item_id: (articles[articles.length - 1]?.sub_item_id ?? undefined) && (articles[articles.length - 1]?.sub_item_id ?? 0) + 1,
-        uuid: generateUUID(),
-        law_number: selectedRegulation ?? 4999 // 4999作為錯誤值
-      }]
+    const newArticle = { ...initialArticle,
+      // 如果 編 不為空值 且 章 為空值 則 設定 編為 前項的編+1
+      code: (tempArticles[tempArticles.length - 1]?.code ?? 0) && !tempArticles[tempArticles.length - 1]?.chapter_id ? (tempArticles[tempArticles.length - 1]?.code ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.code,
+      // 如果 章 不為空值 且 條 為空值 則 設定 章為 前項的章+1
+      chapter_id: (tempArticles[tempArticles.length - 1]?.chapter_id ?? 0) && !tempArticles[tempArticles.length - 1]?.article_id ? (tempArticles[tempArticles.length - 1]?.chapter_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.chapter_id,
+      // 如果 條 不為空值 則 設定 條為 前項的條+1
+      article_id: (tempArticles[tempArticles.length - 1]?.article_id ?? 0) && !tempArticles[tempArticles.length - 1]?.section_id ? (tempArticles[tempArticles.length - 1]?.article_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.article_id,
+      // 如果 條次 不為空值 則 設定 條次為 前項的條次+1
+      sub_article_id: (tempArticles[tempArticles.length - 1]?.sub_article_id ?? 0) && !tempArticles[tempArticles.length - 1]?.section_id ? (tempArticles[tempArticles.length - 1]?.sub_article_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.sub_article_id,
+      // 如果 項 不為空值 則 設定 項為 前項的項+1
+      section_id: (tempArticles[tempArticles.length - 1]?.section_id ?? 0) && !tempArticles[tempArticles.length - 1]?.clause_id ? (tempArticles[tempArticles.length - 1]?.section_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.section_id,
+      // 如果 款 不為空值 則 設定 款為 前項的款+1
+      clause_id: (tempArticles[tempArticles.length - 1]?.clause_id ?? 0) && !tempArticles[tempArticles.length - 1]?.item_id ? (tempArticles[tempArticles.length - 1]?.clause_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.clause_id,
+      // 如果 目 不為空值 則 設定 目為 前項的目+1
+      item_id: (tempArticles[tempArticles.length - 1]?.item_id ?? 0) && !tempArticles[tempArticles.length - 1]?.sub_item_id ? (tempArticles[tempArticles.length - 1]?.item_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.item_id,
+      // 如果 目之 不為空值 則 設定 目之為 前項的目之+1
+      sub_item_id: (tempArticles[tempArticles.length - 1]?.sub_item_id ?? undefined) && (tempArticles[tempArticles.length - 1]?.sub_item_id ?? 0) + 1,
+      uuid: generateUUID(),
+      law_number: selectedRegulation ?? 4999 // 4999作為錯誤值
+    };
+
+    setTempArticles([...tempArticles, {...newArticle, id: generateId(newArticle)}]
     );
   };
 
@@ -183,9 +189,9 @@ const BulkEdit: React.FC = () => {
       return;
     }
 
-    const newArticles = [...articles];
+    const newArticles = [...tempArticles];
     newArticles.splice(index, 1);
-    setArticles(newArticles);
+    setTempArticles(newArticles);
 
     try {
       const response = await fetch(`http://localhost:3000/api/delete-article`, {
@@ -201,13 +207,17 @@ const BulkEdit: React.FC = () => {
       } else {
         alert('Failed to delete article.');
       }
+      fetchArticles(); //刷新頁面
     } catch (error) {
       console.error('Error deleting article:', error);
     }
   };
 
   const handleUpdateRow = async (uuid: string) => {
-    const article = [articles.find((article) => article.uuid === uuid)];
+    const article = tempArticles
+      .filter((article) => article.uuid === uuid)
+      .map((article) => ({ ...article, id: generateId(article) })); // 更新時才update id
+
     try {
       const response = await fetch('http://localhost:3000/api/bulk-update-articles', {
         method: 'POST',
@@ -222,6 +232,7 @@ const BulkEdit: React.FC = () => {
       } else {
         alert('Failed to update article.');
       }
+      fetchArticles(); //刷新頁面
     } catch (error) {
       console.error('Error updating article:', error);
     }
@@ -304,7 +315,7 @@ const BulkEdit: React.FC = () => {
           </div>
         </div>
 
-        {articles.map((article, index) => (
+        {tempArticles.sort((a, b) => a.id > b.id ? 1 : -1).map((article, index) => (
           <div key={index} className="border-b ">
             <div className="flex gap-1">
               <div className='w-20'>
@@ -313,7 +324,7 @@ const BulkEdit: React.FC = () => {
                   id="id"
                   name="id"
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.uuid}
+                  value={article?.uuid}
                   placeholder="UUID"
                   disabled
                 />
@@ -325,8 +336,8 @@ const BulkEdit: React.FC = () => {
                   id="code" 
                   name="code"
                   className="bg-gray-50 border border -gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.code}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
+                  value={article?.code}
+                  onChange={(e) => handleInputChange(article?.uuid, e)}
                   placeholder="編"
                 />
               </div>
@@ -448,17 +459,20 @@ const BulkEdit: React.FC = () => {
               <button
                 type="button"
                 className="bg-red-500 text-white px-4 py-2 rounded-md"
-                onClick={() => handleRemoveRow(index, article.uuid)}
+                onClick={() => handleRemoveRow(index!, article?.uuid)}
                 >
                 Remove Row
               </button>
-              <button 
-                type="button"
-                className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                onClick={() => handleUpdateRow(article.uuid)}
-              >
-                Save
-              </button>
+              {article !== articles[index] && (
+                <button
+                  type="button"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                  onClick={() => handleUpdateRow(article.uuid)}
+                >
+                  Save
+                </button>
+              )}
+
             </div>
           </div>
         ))}
