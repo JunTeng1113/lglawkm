@@ -52,7 +52,8 @@ const digits: { [key: string]: number } = {
 const BulkEdit: React.FC = () => {
   const [regulations, setRegulations] = useState<Regulation[]>([]);
   const [selectedRegulation, setSelectedRegulation] = useState<number | null>(null);
-  const [isExpanded, setIsExpanded] = useState<boolean>(false); // State for collapsible content
+  const [isFold, setIsFold] = useState<Boolean>(false); // State for collapsible content
+  const [foldSet, setFoldSet] = useState<Set<string>>(new Set()); // State for collapsible content
   const [articles, setArticles] = useState<Article[]>([initialArticle as Article]);
 
   function generateUUID() {
@@ -67,6 +68,24 @@ const BulkEdit: React.FC = () => {
     });
   }
 
+  // 做收合展開的功能
+  const handleFold = () => {
+    const keys = ['code', 'chapter_id', 'article_id', 'sub_article_id', 'section_id', 'clause_id', 'item_id', 'sub_item_id'];
+    const newSet = new Set<string>(); // Provide the correct type for the newSet variable
+    
+    if (isFold) {
+      keys.forEach((key) => {
+        if (articles.some((article) => article[key as keyof Article])) {
+          newSet.add(key);
+        }
+      });
+    } else {
+      keys.forEach((key) => newSet.add(key));
+    }
+
+    setFoldSet(newSet);
+    setIsFold(isFold => !isFold);
+  }
 
   const generateId = (article: Article) => {
     const fields = [
@@ -228,8 +247,8 @@ const BulkEdit: React.FC = () => {
               </option>
             ))}
           </select>
-          <button type="button" onClick={() => setIsExpanded(!isExpanded)} className="mb-4 bg-green-500 text-white px-4 py-2 rounded">
-            {isExpanded ? '折叠内容' : '展开内容'}
+          <button type="button" onClick={handleFold} className="mb-4 bg-green-500 text-white px-4 py-2 rounded">
+            {isFold ? '摺疊內容' : '展開內容'}
           </button>
         </div>
         
@@ -238,34 +257,42 @@ const BulkEdit: React.FC = () => {
             <div className='w-20'>
               <label>永久編號</label>
             </div>
-            {isExpanded && (
+            {foldSet.has('code') && (
               <div className='w-12'>
                 <label>編</label>
               </div>
             )}
+            {foldSet.has('chapter_id') && (
             <div className='w-12'>
               <label>章</label>
             </div>
+            )}
+            {foldSet.has('article_id') && (
             <div className='w-12'>
               <label>條</label>
             </div>
-            {isExpanded && (
+            )}
+            {foldSet.has('sub_article_id') && (
               <div className='w-12'>
                 <label>條之</label>
               </div>
             )}
-            <div className='w-12'>
-              <label>項</label>
-            </div>
-            <div className='w-12'>
-              <label>款</label>
-            </div>
-            {isExpanded && (
+            {foldSet.has('section_id') && (
+              <div className='w-12'>
+                <label>項</label>
+              </div>
+            )}
+            {foldSet.has('clause_id') && (
+              <div className='w-12'>
+                <label>款</label>
+              </div>
+            )}
+            {foldSet.has('item_id') && (
               <div className='w-12'>
                 <label>目</label>
               </div>
             )}
-            {isExpanded && (
+            {foldSet.has('sub_item_id') && (
               <div className='w-12'>
                 <label>目之</label>
               </div>
@@ -293,7 +320,7 @@ const BulkEdit: React.FC = () => {
                   disabled
                 />
               </div>
-              {isExpanded && (
+              {foldSet.has('code') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -306,6 +333,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
+              {foldSet.has('chapter_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -317,6 +345,8 @@ const BulkEdit: React.FC = () => {
                   placeholder="章"
                 />
               </div>
+              )}
+              {foldSet.has('article_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -328,7 +358,8 @@ const BulkEdit: React.FC = () => {
                   placeholder="條"
                 />
               </div>
-              {isExpanded && (
+              )}
+              {foldSet.has('sub_article_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -341,6 +372,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
+              {foldSet.has('section_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -352,6 +384,8 @@ const BulkEdit: React.FC = () => {
                   placeholder="項"
                 />
               </div>
+              )}
+              {foldSet.has('clause_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -363,7 +397,8 @@ const BulkEdit: React.FC = () => {
                   placeholder="款"
                 />
               </div>
-              {isExpanded && (
+              )}
+              {foldSet.has('item_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
@@ -376,7 +411,7 @@ const BulkEdit: React.FC = () => {
                 />
               </div>
               )}
-              {isExpanded && (
+              {foldSet.has('sub_item_id') && (
               <div className='w-12'>
                 <input 
                   type="number" 
