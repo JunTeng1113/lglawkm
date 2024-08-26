@@ -21,7 +21,7 @@ interface Regulation {
 }
 
 function SelectLaw() {
-  const [select_law, setSelectLaw] = useState<number>(0);
+  const [select_law, setSelectLaw] = useState<number|undefined>(undefined);
   const [articles, setArticles] = useState<Article[]>([]);
   const [Regulation, setRegulation] = useState<Regulation[]>([]);
   const [chaptersToShow, setChaptersToShow] = useState<Set<number>>(new Set());
@@ -92,7 +92,7 @@ function SelectLaw() {
       }
     </div>
 
-      {Regulation.filter((reg) => isNaN(select_law) || reg.regulation_number === select_law).map((reg) => (
+      {Regulation.filter((reg) => isNaN(select_law ?? NaN) || reg.regulation_number === select_law).map((reg) => (
         <div 
         key={reg.regulation_number}
         className='w-[800px] mx-auto'
