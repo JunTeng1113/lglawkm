@@ -5,7 +5,7 @@ const router = express.Router();
 const path = require('path');
 
 // 初始化 SQLite 資料庫
-const dbPath = '../db/my-database.db';
+const dbPath = path.resolve('../db/my-database.db');
 const db = new sqlite3.Database(dbPath);
 
 // Endpoint to fetch regulation and articles

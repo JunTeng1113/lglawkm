@@ -4,7 +4,7 @@ const router = express.Router();
 const path = require('path');
 
 // Initialize SQLite database
-const dbPath = '../db/my-database.db';
+const dbPath = path.resolve('../db/my-database.db');
 const db = new sqlite3.Database(dbPath);
 // Batch update endpoint
 router.post('/delete-article', (req, res) => {

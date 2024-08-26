@@ -25,7 +25,8 @@ app.use(bodyParser.json());
 // 解析 application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: true }));
 
+module.exports = app;
 // 啟動伺服器
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}`);
-});
+// app.listen(port, () => {
+//   console.log(`Server running at http://localhost:${port}`);
+// });
