@@ -56,4 +56,48 @@ router.get('/regulations', (req, res) => {
   }
 });
 
+// 新增法規
+router.post('/regulations/create', (req, res) => {
+  const { regulation_name, authority, update_date } = req.body;
+  
+  db.run(
+    'INSERT INTO regulations (regulation_name, authority, update_date) VALUES (?, ?, ?)',
+    [regulation_name, authority, update_date],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ id: this.lastID, regulation_name, authority, update_date });
+    }
+  );
+});
+
+// 更新法規
+router.put('/regulations/update', (req, res) => {
+  const { id, regulation_name, authority, update_date } = req.body;
+  
+  db.run(
+    'UPDATE regulations SET regulation_name = ?, authority = ?, update_date = ? WHERE id = ?',
+    [regulation_name, authority, update_date, id],
+    function(err) {
+      if (err) {
+        return res.status(500).json({ error: err.message });
+      }
+      res.json({ id, regulation_name, authority, update_date });
+    }
+  );
+});
+
+// 刪除法規
+router.delete('/regulations/delete', (req, res) => {
+  const { id } = req.body;
+  
+  db.run('DELETE FROM regulations WHERE id = ?', [id], function(err) {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ message: '法規已刪除' });
+  });
+});
+
 module.exports = router;

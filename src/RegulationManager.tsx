@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Regulation {
   id: string;
@@ -20,12 +20,37 @@ const RegulationManager: React.FC = () => {
     update_date: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEditing && selectedRegulation) {
-      // 處理更新邏輯
-    } else {
-      // 處理新增邏輯
+    try {
+      const endpoint = isEditing ? '/api/regulations/update' : '/api/regulations/create';
+      const method = isEditing ? 'PUT' : 'POST';
+      const body = isEditing ? { ...formData, id: selectedRegulation?.id } : formData;
+
+      const response = await fetch(`http://localhost:3000${endpoint}`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        throw new Error('操作失敗');
+      }
+
+      // 重置表單和狀態
+      setFormData({ regulation_name: '', authority: '', update_date: '' });
+      setIsEditing(false);
+      setSelectedRegulation(null);
+      
+      // 重新獲取法規列表
+      const updatedData = await fetch('http://localhost:3000/api/regulations').then(res => res.json());
+      setRegulations(updatedData);
+      
+    } catch (error) {
+      console.error('提交失敗:', error);
+      alert('操作失敗，請稍後再試');
     }
   };
 
@@ -34,14 +59,51 @@ const RegulationManager: React.FC = () => {
     setShowDeleteConfirm(true);
   };
 
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (deleteConfirmText === selectedRegulation?.regulation_name) {
-      // 處理刪除邏輯
-      setShowDeleteConfirm(false);
-      setDeleteConfirmText('');
-      setSelectedRegulation(null);
+      try {
+        const response = await fetch(`http://localhost:3000/api/regulations/delete`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ id: selectedRegulation.id }),
+        });
+
+        if (!response.ok) {
+          throw new Error('刪除失敗');
+        }
+
+        // 重置狀態
+        setShowDeleteConfirm(false);
+        setDeleteConfirmText('');
+        setSelectedRegulation(null);
+
+        // 重新獲取法規列表
+        const updatedData = await fetch('http://localhost:3000/api/regulations').then(res => res.json());
+        setRegulations(updatedData);
+
+      } catch (error) {
+        console.error('刪除失敗:', error);
+        alert('刪除失敗，請稍後再試');
+      }
     }
   };
+
+  // 在組件加載時獲取法規列表
+  useEffect(() => {
+    const fetchRegulations = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/regulations');
+        const data = await response.json();
+        setRegulations(data);
+      } catch (error) {
+        console.error('獲取法規列表失敗:', error);
+      }
+    };
+
+    fetchRegulations();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
