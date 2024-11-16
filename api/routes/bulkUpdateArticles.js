@@ -1,11 +1,7 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 const router = express.Router();
-const path = require('path');
 
-// Initialize SQLite database
-const dbPath = path.resolve(__dirname, '../db/my-database.db');
-const db = new sqlite3.Database(dbPath);
+const db = require('../dbConfig');
 // Batch update endpoint
 router.post('/bulk-update-articles', (req, res) => {
   console.log('Received request to update articles:', req.body);

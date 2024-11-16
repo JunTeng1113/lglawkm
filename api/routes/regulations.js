@@ -1,12 +1,8 @@
 const express = require('express');
-const sqlite3 = require('sqlite3').verbose();
 
 const router = express.Router();
-const path = require('path');
 
-// 初始化 SQLite 資料庫
-const dbPath = path.resolve('../db/my-database.db');
-const db = new sqlite3.Database(dbPath);
+const db = require('../dbConfig');
 
 // Endpoint to fetch regulation and articles
 router.get('/regulations', (req, res) => {

@@ -27,6 +27,6 @@ app.use(bodyParser.urlencoded({ extended: true }));
 
 module.exports = app;
 // 啟動伺服器
-// app.listen(port, () => {
-//   console.log(`Server running at http://localhost:${port}`);
-// });
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});

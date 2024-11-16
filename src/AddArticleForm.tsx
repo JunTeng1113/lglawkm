@@ -56,6 +56,8 @@ const BulkEdit: React.FC = () => {
   const [foldSet, setFoldSet] = useState<Set<string>>(new Set()); // State for collapsible content
   const [articles, setArticles] = useState<Article[]>([initialArticle as Article]);
   const [tempArticles, setTempArticles] = useState<Article[]>([]);
+  const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
+  const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
 
   function generateUUID() {
     var d = new Date().getTime();
@@ -139,7 +141,14 @@ const BulkEdit: React.FC = () => {
     setTempArticles(articles);
   }, [articles]);
 
+  const handleSingleEdit = (uuid: string) => {
+    setCurrentEditingId(uuid);
+  };
+
   const handleInputChange = (targetId: string, e: React.ChangeEvent<HTMLInputElement>) => {
+    if (currentEditingId && currentEditingId !== targetId) {
+      return; // 在逐条编辑模式下，只允许编辑当前选中的条目
+    }
     const { name, value } = e.target;
     const newArticles = tempArticles.map((article) => {
       if (article.uuid === targetId) {
@@ -238,252 +247,291 @@ const BulkEdit: React.FC = () => {
     }
   }
 
+  const togglePreviewMode = () => {
+    setIsPreviewMode(!isPreviewMode);
+  };
+
+  const renderPreview = () => {
+    return (
+      <div className="preview-container">
+        {tempArticles.sort((a, b) => a.id > b.id ? 1 : -1).map((article, index) => (
+          <div key={index} className="preview-item p-4 border-b">
+            <div className="text-lg font-bold">
+              {article.chapter_id && `第${article.chapter_id}章`}
+              {article.article_id && ` 第${article.article_id}條`}
+              {article.sub_article_id && `-${article.sub_article_id}`}
+            </div>
+            <div className="mt-2">{article.content}</div>
+          </div>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className='m-4'>
-      <h1>批量編輯</h1>
-      <form>
-        <div className="mb-4">
-          <label htmlFor="regulation-select">選擇法規:</label>
-          <select
-            id="regulation-select"
-            value={selectedRegulation ?? ''}
-            onChange={(e) => setSelectedRegulation(Number(e.target.value))}
-          >
-            <option value="" disabled>選擇法規</option>
-            {regulations.map((regulation) => (
-              <option key={regulation.regulation_number} value={regulation.regulation_number}>
-                {regulation.regulation_name}
-              </option>
-            ))}
-          </select>
-          <button type="button" onClick={handleFold} className="mb-4 bg-green-500 text-white px-4 py-2 rounded">
-            {isFold ? '展開內容' : '摺疊內容'}
-          </button>
-        </div>
-        
-        <div className="mb-4 border-b pb-4">
-          <div className="flex gap-1">
-            <div className='w-20'>
-              <label>永久編號</label>
-            </div>
-            {!foldSet.has('code') && (
-              <div className='w-12'>
-                <label>編</label>
-              </div>
-            )}
-            {!foldSet.has('chapter_id') && (
-            <div className='w-12'>
-              <label>章</label>
-            </div>
-            )}
-            {!foldSet.has('article_id') && (
-            <div className='w-12'>
-              <label>條</label>
-            </div>
-            )}
-            {!foldSet.has('sub_article_id') && (
-              <div className='w-12'>
-                <label>條之</label>
-              </div>
-            )}
-            {!foldSet.has('section_id') && (
-              <div className='w-12'>
-                <label>項</label>
-              </div>
-            )}
-            {!foldSet.has('clause_id') && (
-              <div className='w-12'>
-                <label>款</label>
-              </div>
-            )}
-            {!foldSet.has('item_id') && (
-              <div className='w-12'>
-                <label>目</label>
-              </div>
-            )}
-            {!foldSet.has('sub_item_id') && (
-              <div className='w-12'>
-                <label>目之</label>
-              </div>
-            )}
-            <div className='w-[800px]'>
-              <label>條文內容</label>
-            </div> 
-            <div className='w-20'>
-              <label>法律編號</label>
-            </div>
+      <div className="flex justify-between items-center mb-4">
+        <h1>批量編輯</h1>
+        <button 
+          onClick={togglePreviewMode}
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+        >
+          {isPreviewMode ? '返回編輯' : '預覽'}
+        </button>
+      </div>
+      
+      {isPreviewMode ? renderPreview() : (
+        <form>
+          <div className="mb-4">
+            <label htmlFor="regulation-select">選擇法規:</label>
+            <select
+              id="regulation-select"
+              value={selectedRegulation ?? ''}
+              onChange={(e) => setSelectedRegulation(Number(e.target.value))}
+            >
+              <option value="" disabled>選擇法規</option>
+              {regulations.map((regulation) => (
+                <option key={regulation.regulation_number} value={regulation.regulation_number}>
+                  {regulation.regulation_name}
+                </option>
+              ))}
+            </select>
+            <button type="button" onClick={handleFold} className="mb-4 bg-green-500 text-white px-4 py-2 rounded">
+              {isFold ? '展開內容' : '摺疊內容'}
+            </button>
           </div>
-        </div>
-
-        {tempArticles.sort((a, b) => a.id > b.id ? 1 : -1).map((article, index) => (
-          <div key={index} className="border-b ">
+          
+          <div className="mb-4 border-b pb-4">
             <div className="flex gap-1">
               <div className='w-20'>
-                <input 
-                  type="text" 
-                  id="id"
-                  name="id"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article?.uuid}
-                  placeholder="UUID"
-                  disabled
-                />
+                <label>永久編號</label>
               </div>
               {!foldSet.has('code') && (
-              <div className='w-12'>
-                <input 
-                  type="number" 
-                  id="code" 
-                  name="code"
-                  className="bg-gray-50 border border -gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article?.code}
-                  onChange={(e) => handleInputChange(article?.uuid, e)}
-                  placeholder="編"
-                />
-              </div>
+                <div className='w-12'>
+                  <label>編</label>
+                </div>
               )}
               {!foldSet.has('chapter_id') && (
               <div className='w-12'>
-                <input 
-                  type="number" 
-                  id="chapter_id"
-                  name="chapter_id"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.chapter_id}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="章"
-                />
+                <label>章</label>
               </div>
               )}
               {!foldSet.has('article_id') && (
               <div className='w-12'>
-                <input 
-                  type="number" 
-                  id="article_id" 
-                  name="article_id"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.article_id}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="條"
-                />
+                <label>條</label>
               </div>
               )}
               {!foldSet.has('sub_article_id') && (
-              <div className='w-12'>
-                <input 
-                  type="number" 
-                  id="sub_article_id" 
-                  name="sub_article_id"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.sub_article_id}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="條之"
-                />
-              </div>
+                <div className='w-12'>
+                  <label>條之</label>
+                </div>
               )}
               {!foldSet.has('section_id') && (
-              <div className='w-12'>
-                <input 
-                  type="number" 
-                  id="section_id" 
-                  name="section_id"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.section_id}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="項"
-                />
-              </div>
+                <div className='w-12'>
+                  <label>項</label>
+                </div>
               )}
               {!foldSet.has('clause_id') && (
-              <div className='w-12'>
-                <input 
-                  type="number" 
-                  id="clause_id" 
-                  name="clause_id"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.clause_id}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="款"
-                />
-              </div>
+                <div className='w-12'>
+                  <label>款</label>
+                </div>
               )}
               {!foldSet.has('item_id') && (
-              <div className='w-12'>
-                <input 
-                  type="number" 
-                  id="item_id" 
-                  name="item_id"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.item_id}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="目"
-                />
-              </div>
+                <div className='w-12'>
+                  <label>目</label>
+                </div>
               )}
               {!foldSet.has('sub_item_id') && (
-              <div className='w-12'>
-                <input 
-                  type="number" 
-                  id="sub_item_id" 
-                  name="sub_item_id"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.sub_item_id}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="目之○"
-                />
-              </div>
+                <div className='w-12'>
+                  <label>目之</label>
+                </div>
               )}
               <div className='w-[800px]'>
-                <input
-                  type="text"
-                  id="content"
-                  name="content"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.content}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="條文內容"
-                />
-              </div>
+                <label>條文內容</label>
+              </div> 
               <div className='w-20'>
-                <input
-                  type="number"
-                  id="law_number"
-                  name="law_number"
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                  value={article.law_number}
-                  onChange={(e) => handleInputChange(article.uuid, e)}
-                  placeholder="Law Number"
-                  disabled
-                />
+                <label>法律編號</label>
               </div>
-              <button
-                type="button"
-                className="bg-red-500 text-white px-4 py-2 rounded-md"
-                onClick={() => handleRemoveRow(index!, article?.uuid)}
-                >
-                Remove Row
-              </button>
-              {article !== articles[index] && (
-                <button
-                  type="button"
-                  className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                  onClick={() => handleUpdateRow(article.uuid)}
-                >
-                  Save
-                </button>
-              )}
-
             </div>
           </div>
-        ))}
-        <button
-          type="button"
-          className="bg-green-500 text-white px-4 py-2 rounded-md mb-4"
-          onClick={handleAddRow}
-        >
-          Add Another Row
-        </button>
-      </form>
+
+          {tempArticles.sort((a, b) => a.id > b.id ? 1 : -1).map((article, index) => (
+            <div key={index} className={`border-b ${currentEditingId === article.uuid ? 'bg-gray-100' : ''}`}>
+              <div className="flex gap-1">
+                <div className='w-20'>
+                  <input 
+                    type="text" 
+                    id="id"
+                    name="id"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article?.uuid}
+                    placeholder="UUID"
+                    disabled
+                  />
+                </div>
+                {!foldSet.has('code') && (
+                <div className='w-12'>
+                  <input 
+                    type="number" 
+                    id="code" 
+                    name="code"
+                    className="bg-gray-50 border border -gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article?.code}
+                    onChange={(e) => handleInputChange(article?.uuid, e)}
+                    placeholder="編"
+                  />
+                </div>
+                )}
+                {!foldSet.has('chapter_id') && (
+                <div className='w-12'>
+                  <input 
+                    type="number" 
+                    id="chapter_id"
+                    name="chapter_id"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.chapter_id}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="章"
+                  />
+                </div>
+                )}
+                {!foldSet.has('article_id') && (
+                <div className='w-12'>
+                  <input 
+                    type="number" 
+                    id="article_id" 
+                    name="article_id"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.article_id}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="條"
+                  />
+                </div>
+                )}
+                {!foldSet.has('sub_article_id') && (
+                <div className='w-12'>
+                  <input 
+                    type="number" 
+                    id="sub_article_id" 
+                    name="sub_article_id"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.sub_article_id}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="條之"
+                  />
+                </div>
+                )}
+                {!foldSet.has('section_id') && (
+                <div className='w-12'>
+                  <input 
+                    type="number" 
+                    id="section_id" 
+                    name="section_id"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.section_id}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="項"
+                  />
+                </div>
+                )}
+                {!foldSet.has('clause_id') && (
+                <div className='w-12'>
+                  <input 
+                    type="number" 
+                    id="clause_id" 
+                    name="clause_id"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.clause_id}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="款"
+                  />
+                </div>
+                )}
+                {!foldSet.has('item_id') && (
+                <div className='w-12'>
+                  <input 
+                    type="number" 
+                    id="item_id" 
+                    name="item_id"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.item_id}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="目"
+                  />
+                </div>
+                )}
+                {!foldSet.has('sub_item_id') && (
+                <div className='w-12'>
+                  <input 
+                    type="number" 
+                    id="sub_item_id" 
+                    name="sub_item_id"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.sub_item_id}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="目之○"
+                  />
+                </div>
+                )}
+                <div className='w-[800px]'>
+                  <input
+                    type="text"
+                    id="content"
+                    name="content"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.content}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="條文內容"
+                  />
+                </div>
+                <div className='w-20'>
+                  <input
+                    type="number"
+                    id="law_number"
+                    name="law_number"
+                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                    value={article.law_number}
+                    onChange={(e) => handleInputChange(article.uuid, e)}
+                    placeholder="Law Number"
+                    disabled
+                  />
+                </div>
+                <button
+                  type="button"
+                  className="bg-yellow-500 text-white px-4 py-2 rounded-md mr-2"
+                  onClick={() => handleSingleEdit(article.uuid)}
+                >
+                  編輯
+                </button>
+                <button
+                  type="button"
+                  className="bg-red-500 text-white px-4 py-2 rounded-md"
+                  onClick={() => handleRemoveRow(index!, article?.uuid)}
+                  >
+                  Remove Row
+                </button>
+                {article !== articles[index] && (
+                  <button
+                    type="button"
+                    className="bg-blue-500 text-white px-4 py-2 rounded-md"
+                    onClick={() => handleUpdateRow(article.uuid)}
+                  >
+                    Save
+                  </button>
+                )}
+
+              </div>
+            </div>
+          ))}
+          <button
+            type="button"
+            className="bg-green-500 text-white px-4 py-2 rounded-md mb-4"
+            onClick={handleAddRow}
+          >
+            Add Another Row
+          </button>
+        </form>
+      )}
     </div>
   );
 };
