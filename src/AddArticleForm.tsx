@@ -355,9 +355,6 @@ const BulkEdit: React.FC = () => {
           
           <div className="mb-4 border-b pb-4">
             <div className="flex gap-1">
-              <div className='w-20'>
-                <label>永久編號</label>
-              </div>
               {!foldSet.has('code') && (
                 <div className='w-12'>
                   <label>編</label>
@@ -401,26 +398,12 @@ const BulkEdit: React.FC = () => {
               <div className='w-[800px]'>
                 <label>條文內容</label>
               </div> 
-              <div className='w-20'>
-                <label>法律編號</label>
-              </div>
             </div>
           </div>
 
           {tempArticles.sort((a, b) => a.id > b.id ? 1 : -1).map((article, index) => (
             <div key={index} className={`border-b ${currentEditingId === article.uuid ? 'bg-gray-100' : ''}`}>
               <div className="flex gap-1">
-                <div className='w-20'>
-                  <input 
-                    type="text" 
-                    id="id"
-                    name="id"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    value={article?.uuid}
-                    placeholder="UUID"
-                    disabled
-                  />
-                </div>
                 {!foldSet.has('code') && (
                 <div className='w-12'>
                   <input 
@@ -536,18 +519,6 @@ const BulkEdit: React.FC = () => {
                     placeholder="條文內容"
                   />
                 </div>
-                <div className='w-20'>
-                  <input
-                    type="number"
-                    id="law_number"
-                    name="law_number"
-                    className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                    value={article.law_number}
-                    onChange={(e) => handleInputChange(article.uuid, e)}
-                    placeholder="Law Number"
-                    disabled
-                  />
-                </div>
                 <button
                   type="button"
                   className="bg-yellow-500 text-white px-4 py-2 rounded-md mr-2"
@@ -560,7 +531,7 @@ const BulkEdit: React.FC = () => {
                   className="bg-red-500 text-white px-4 py-2 rounded-md"
                   onClick={() => handleRemoveRow(index!, article?.uuid)}
                   >
-                  Remove Row
+                  刪除
                 </button>
                 {article !== articles[index] && (
                   <button
