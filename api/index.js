@@ -6,6 +6,7 @@ const bulkAddArticles = require('./routes/bulkAddArticles');
 const bulkUpdateArticles = require('./routes/bulkUpdateArticles');
 const deleteArticle = require('./routes/DeleteArticle');
 const regulations = require('./routes/regulations');
+const preview = require('./routes/preview');
 
 const app = express();
 const port = 3000; // 後端伺服器的端口
@@ -18,6 +19,7 @@ app.use('/api', bulkAddArticles);
 app.use('/api', bulkUpdateArticles);
 app.use('/api', deleteArticle);
 app.use('/api', regulations);
+app.use('/api', preview);
 
 // 解析 application/json
 app.use(bodyParser.json());

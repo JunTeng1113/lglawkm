@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import SelectLaw from './SelectLaw';
 import AddArticleForm from './AddArticleForm';
 import BulkAdd from './BulkAdd';
+import SplitEditor from './components/SplitEditor';
 
 const App: React.FC = () => {
   return (
@@ -10,7 +11,7 @@ const App: React.FC = () => {
       <Routes>
         <Route path="/" element={<SelectLaw />} />
         <Route path="/add" element={<AddArticleForm />} />
-        <Route path="/bulk" element={<BulkAdd />} />
+        <Route path="/edit" element={<SplitEditor />} />
       </Routes>
     </Router>
   );

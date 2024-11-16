@@ -58,6 +58,7 @@ const BulkEdit: React.FC = () => {
   const [tempArticles, setTempArticles] = useState<Article[]>([]);
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
   const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
+  const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
 
   function generateUUID() {
     var d = new Date().getTime();
@@ -268,8 +269,44 @@ const BulkEdit: React.FC = () => {
     );
   };
 
+  const handleBulkDelete = async () => {
+    if (selectedItems.size === 0) return;
+    
+    const confirmDelete = window.confirm(`確定要刪除選中的 ${selectedItems.size} 條記錄嗎？`);
+    if (!confirmDelete) return;
+
+    try {
+      const response = await fetch(`http://localhost:3000/api/bulk-delete-articles`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ uuids: Array.from(selectedItems) }),
+      });
+
+      if (response.ok) {
+        alert('批量刪除成功！');
+        setSelectedItems(new Set());
+        fetchArticles();
+      }
+    } catch (error) {
+      console.error('Error bulk deleting articles:', error);
+    }
+  };
+
   return (
     <div className='m-4'>
+      {selectedItems.size > 0 && (
+        <div className="fixed bottom-4 right-4 bg-white p-4 shadow-lg rounded-lg">
+          <span className="mr-4">已選擇 {selectedItems.size} 項</span>
+          <button
+            onClick={handleBulkDelete}
+            className="bg-red-500 text-white px-4 py-2 rounded"
+          >
+            批量刪除
+          </button>
+        </div>
+      )}
       <div className="flex justify-between items-center mb-4">
         <h1>批量編輯</h1>
         <button 
