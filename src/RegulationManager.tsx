@@ -1,23 +1,25 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 interface Regulation {
-  id: string;
+  regulation_number: string;
   regulation_name: string;
-  authority: string;
-  update_date: string;
+  competent_authority: string;
+  updated_at: string;
 }
 
 const RegulationManager: React.FC = () => {
+  const navigate = useNavigate();
   const [regulations, setRegulations] = useState<Regulation[]>([]); // 假設這裡會從API獲取數據
   const [selectedRegulation, setSelectedRegulation] = useState<Regulation | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
 
-  const [formData, setFormData] = useState<Omit<Regulation, 'id'>>({
+  const [formData, setFormData] = useState<Omit<Regulation, 'regulation_number'>>({
     regulation_name: '',
-    authority: '',
-    update_date: ''
+    competent_authority: '',
+    updated_at: ''
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -25,7 +27,7 @@ const RegulationManager: React.FC = () => {
     try {
       const endpoint = isEditing ? '/api/regulations/update' : '/api/regulations/create';
       const method = isEditing ? 'PUT' : 'POST';
-      const body = isEditing ? { ...formData, id: selectedRegulation?.id } : formData;
+      const body = isEditing ? { ...formData, regulation_number: selectedRegulation?.regulation_number } : formData;
 
       const response = await fetch(`http://localhost:3000${endpoint}`, {
         method,
@@ -40,7 +42,7 @@ const RegulationManager: React.FC = () => {
       }
 
       // 重置表單和狀態
-      setFormData({ regulation_name: '', authority: '', update_date: '' });
+      setFormData({ regulation_name: '', competent_authority: '', updated_at: '' });
       setIsEditing(false);
       setSelectedRegulation(null);
       
@@ -67,7 +69,7 @@ const RegulationManager: React.FC = () => {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ id: selectedRegulation.id }),
+          body: JSON.stringify({ regulation_number: selectedRegulation.regulation_number }),
         });
 
         if (!response.ok) {
@@ -105,6 +107,11 @@ const RegulationManager: React.FC = () => {
     fetchRegulations();
   }, []);
 
+  // 新增導航到條文編輯頁面的處理函數
+  const handleEditArticles = (regulation: Regulation) => {
+    navigate(`/bulk-edit/${regulation.regulation_number}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -122,7 +129,7 @@ const RegulationManager: React.FC = () => {
                 onClick={() => {
                   setIsEditing(false);
                   setSelectedRegulation(null);
-                  setFormData({ regulation_name: '', authority: '', update_date: '' });
+                  setFormData({ regulation_name: '', competent_authority: '', updated_at: '' });
                 }}
                 className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
               >
@@ -130,22 +137,28 @@ const RegulationManager: React.FC = () => {
               </button>
             </div>
             <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+              <table className="min-w-full divregulation_numbere-y divregulation_numbere-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">法規名稱</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">主管機關</th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">更新日期</th>
-                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">操作</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wregulation_numberer">法規名稱</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wregulation_numberer">主管機關</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wregulation_numberer">更新日期</th>
+                    <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wregulation_numberer">操作</th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
+                <tbody className="bg-white divregulation_numbere-y divregulation_numbere-gray-200">
                   {regulations.map((regulation) => (
-                    <tr key={regulation.id}>
+                    <tr key={regulation.regulation_number}>
                       <td className="px-6 py-4 whitespace-nowrap">{regulation.regulation_name}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{regulation.authority}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{regulation.update_date}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{regulation.competent_authority}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{regulation.updated_at}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button
+                          onClick={() => handleEditArticles(regulation)}
+                          className="text-blue-600 hover:text-blue-900 mr-4"
+                        >
+                          編輯條文
+                        </button>
                         <button
                           onClick={() => {
                             setIsEditing(true);
@@ -177,7 +190,7 @@ const RegulationManager: React.FC = () => {
             <h2 className="text-lg font-semibold mb-4">
               {isEditing ? '修改法規' : '新增法規'}
             </h2>
-            <div className="grid grid-cols-1 gap-6">
+            <div className="grregulation_number grregulation_number-cols-1 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   法規名稱
@@ -196,8 +209,8 @@ const RegulationManager: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={formData.authority}
-                  onChange={(e) => setFormData({ ...formData, authority: e.target.value })}
+                  value={formData.competent_authority}
+                  onChange={(e) => setFormData({ ...formData, competent_authority: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   required
                 />
@@ -208,8 +221,8 @@ const RegulationManager: React.FC = () => {
                 </label>
                 <input
                   type="text"
-                  value={formData.update_date}
-                  onChange={(e) => setFormData({ ...formData, update_date: e.target.value })}
+                  value={formData.updated_at}
+                  onChange={(e) => setFormData({ ...formData, updated_at: e.target.value })}
                   placeholder="例：民國112年5月31日"
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
                   required
@@ -222,7 +235,7 @@ const RegulationManager: React.FC = () => {
                 onClick={() => {
                   setIsEditing(false);
                   setSelectedRegulation(null);
-                  setFormData({ regulation_name: '', authority: '', update_date: '' });
+                  setFormData({ regulation_name: '', competent_authority: '', updated_at: '' });
                 }}
                 className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >

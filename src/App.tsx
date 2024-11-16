@@ -1,17 +1,16 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import RegulationManager from './RegulationManager';
+import BulkEdit from './AddArticleForm';
 import SelectLaw from './SelectLaw';
-import AddArticleForm from './AddArticleForm';
-import BulkAdd from './BulkAdd';
-import SplitEditor from './components/SplitEditor';
 
 const App: React.FC = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<SelectLaw />} />
-        <Route path="/add" element={<AddArticleForm />} />
-        <Route path="/edit" element={<SplitEditor />} />
+        <Route path="/select-law" element={<SelectLaw />} />
+        <Route path="/" element={<RegulationManager />} />
+        <Route path="/bulk-edit/:regulationId" element={<BulkEdit />} />
       </Routes>
     </Router>
   );

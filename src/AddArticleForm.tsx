@@ -1,5 +1,6 @@
 // pages/BulkEdit.tsx
 import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 
 interface Article {
   uuid: string;
@@ -50,6 +51,8 @@ const digits: { [key: string]: number } = {
 }
 
 const BulkEdit: React.FC = () => {
+  const { regulationId } = useParams();
+  const navigate = useNavigate();
   const [regulations, setRegulations] = useState<Regulation[]>([]);
   const [selectedRegulation, setSelectedRegulation] = useState<number | null>(null);
   const [isFold, setIsFold] = useState<Boolean>(false); // State for collapsible content
@@ -59,6 +62,12 @@ const BulkEdit: React.FC = () => {
   const [isPreviewMode, setIsPreviewMode] = useState<boolean>(false);
   const [currentEditingId, setCurrentEditingId] = useState<string | null>(null);
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (regulationId) {
+      setSelectedRegulation(Number(regulationId));
+    }
+  }, [regulationId]);
 
   function generateUUID() {
     var d = new Date().getTime();
@@ -308,6 +317,12 @@ const BulkEdit: React.FC = () => {
         </div>
       )}
       <div className="flex justify-between items-center mb-4">
+        <button
+          onClick={() => navigate('/')}
+          className="bg-gray-500 text-white px-4 py-2 rounded mr-4"
+        >
+          返回法規管理
+        </button>
         <h1>批量編輯</h1>
         <button 
           onClick={togglePreviewMode}
