@@ -436,12 +436,19 @@ const BulkEdit: React.FC = () => {
 
   // 添加向上插入一列的函數
   const handleInsertAbove = (index: number) => {
+    const currentArticle = tempArticles[index];
     const newArticle = {
       ...initialArticle,
       uuid: generateUUID(),
-      // 複製當前行的某些屬性
-      code: tempArticles[index].code,
-      chapter_id: tempArticles[index].chapter_id,
+      // 複製當前行的所有層級值
+      code: currentArticle.code,
+      chapter_id: currentArticle.chapter_id,
+      article_id: currentArticle.article_id,
+      sub_article_id: currentArticle.sub_article_id,
+      section_id: currentArticle.section_id,
+      clause_id: currentArticle.clause_id,
+      item_id: currentArticle.item_id,
+      sub_item_id: currentArticle.sub_item_id,
     };
     
     const newArticles = [...tempArticles];
@@ -451,12 +458,19 @@ const BulkEdit: React.FC = () => {
 
   // 添加向下插入一列的函數
   const handleInsertBelow = (index: number) => {
+    const currentArticle = tempArticles[index];
     const newArticle = {
       ...initialArticle,
       uuid: generateUUID(),
-      // 複製當前行的某些屬性
-      code: tempArticles[index].code,
-      chapter_id: tempArticles[index].chapter_id,
+      // 複製當前行的所有層級值
+      code: currentArticle.code,
+      chapter_id: currentArticle.chapter_id,
+      article_id: currentArticle.article_id,
+      sub_article_id: currentArticle.sub_article_id,
+      section_id: currentArticle.section_id,
+      clause_id: currentArticle.clause_id,
+      item_id: currentArticle.item_id,
+      sub_item_id: currentArticle.sub_item_id,
     };
     
     const newArticles = [...tempArticles];
