@@ -67,6 +67,7 @@ const BulkEdit: React.FC = () => {
   const [bulkEditMode, setBulkEditMode] = useState<boolean>(false);
   const [bulkEditText, setBulkEditText] = useState<string>('');
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [deleteConfirm, setdeleteConfirm] = useState<boolean>(true);
 
   useEffect(() => {
     if (regulationId) {
@@ -200,9 +201,11 @@ const BulkEdit: React.FC = () => {
   };
 
   const handleRemoveRow = async (index: number, uuid: string) => {
-    const confirmDelete = window.confirm('確定要刪除這條文章嗎？');
-    if (!confirmDelete) {
-      return;
+    if (deleteConfirm) {
+      const confirmDelete = window.confirm('確定要刪除這條文章嗎？');
+      if (!confirmDelete) {
+        return;
+      }
     }
 
     // 顯示載入中的 toast
@@ -496,6 +499,10 @@ const BulkEdit: React.FC = () => {
     });
   };
 
+  const handleDeleteConfirmChange = () => {
+    setdeleteConfirm(!deleteConfirm);
+  };
+
   return (
     <div className='m-4'>
       <Toaster 
@@ -543,24 +550,36 @@ const BulkEdit: React.FC = () => {
           返回法規管理
         </button>
         <h1>批量編輯</h1>
-        <button 
-          onClick={handleSaveAll}
-          className="bg-green-500 text-white px-4 py-2 rounded mr-4"
-        >
-          全部儲存
-        </button>
-        <button 
-          onClick={togglePreviewMode}
-          className="bg-blue-500 text-white px-4 py-2 rounded"
-        >
-          {isPreviewMode ? '返回編輯' : '預覽'}
-        </button>
-        <button 
-          onClick={bulkEditMode ? handleBulkEditSave : handleBulkEdit}
-          className="bg-purple-500 text-white px-4 py-2 rounded"
-        >
-          {bulkEditMode ? '保存批量編輯' : '批量編輯'}
-        </button>
+        <div className="flex items-center gap-3">
+          <label className="inline-flex items-center cursor-pointer">
+            <input
+              type="checkbox"
+              className="sr-only peer"
+              checked={deleteConfirm}
+              onChange={handleDeleteConfirmChange}
+            />
+            <div className="relative w-11 h-6 bg-gray-200 rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-0.5 after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-green-600"></div>
+            <span className="ms-3 text-sm font-medium text-gray-900">刪除重複確認</span>
+          </label>
+          <button 
+            onClick={handleSaveAll}
+            className="bg-green-500 text-white px-4 py-2 rounded"
+          >
+            全部儲存
+          </button>
+          <button 
+            onClick={togglePreviewMode}
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+          >
+            {isPreviewMode ? '返回編輯' : '預覽'}
+          </button>
+          <button 
+            onClick={bulkEditMode ? handleBulkEditSave : handleBulkEdit}
+            className="bg-purple-500 text-white px-4 py-2 rounded"
+          >
+            {bulkEditMode ? '保存批量編輯' : '批量編輯'}
+          </button>
+        </div>
       </div>
       
       {isPreviewMode ? renderPreview() : (
@@ -796,7 +815,7 @@ const BulkEdit: React.FC = () => {
                             />
                           </div>
                           )}
-                          <div className='w-[800px]'>
+                          <div className='w-[1000px]'>
                             <input
                               type="text"
                               id="content"
@@ -807,15 +826,15 @@ const BulkEdit: React.FC = () => {
                               placeholder="條文內容"
                             />
                           </div>
-                          <button
-                            type="button"
-                            className="bg-red-500 text-white px-4 py-2 rounded-md"
-                            onClick={() => handleRemoveRow(index!, article?.uuid)}
-                          >
-                            刪除
-                          </button>
                           {hoveredIndex === index && (
                             <>
+                              <button
+                                type="button"
+                                className="bg-red-500 text-white px-4 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
+                                onClick={() => handleRemoveRow(index!, article?.uuid)}
+                              >
+                                刪除
+                              </button>
                               <button
                                 className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
                                 onClick={() => handleInsertAbove(index)}
