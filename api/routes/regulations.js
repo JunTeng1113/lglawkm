@@ -9,25 +9,39 @@ router.get('/regulations', (req, res) => {
   const lawNumber = req.query.law_number ? req.query.law_number : undefined;
 
   if (lawNumber === undefined) {
-    // Fetch all regulations
-    db.all('SELECT * FROM constitution_articles, regulations WHERE constitution_articles.law_number = regulations.regulation_number ORDER BY uuid', (err, articles) => {
+    // Fetch all regulations with their details
+    db.all(`
+      SELECT r.*, ca.* 
+      FROM regulations r 
+      LEFT JOIN constitution_articles ca 
+      ON r.regulation_number = ca.law_number 
+      ORDER BY r.regulation_number, ca.id`, 
+    (err, rows) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
 
-      res.json(articles.reduce((acc, article) => {
-        const regulation = acc.find((regulation) => regulation.regulation_number === article.law_number);
-        if (regulation) {
-          regulation.articles.push(article);
-        } else {
-          acc.push({
-            regulation_number: article.law_number,
-            regulation_name: article.regulation_name,
-            articles: [article]
+      const regulationsMap = new Map();
+
+      rows.forEach(row => {
+        if (!regulationsMap.has(row.regulation_number)) {
+          regulationsMap.set(row.regulation_number, {
+            regulation_number: row.regulation_number,
+            regulation_name: row.regulation_name,
+            competent_authority: row.competent_authority,
+            updated_at: row.updated_at,
+            articles: []
           });
         }
-        return acc;
-      }, []));
+
+        if (row.uuid) {
+          const regulation = regulationsMap.get(row.regulation_number);
+          regulation.articles.push(row);
+        }
+      });
+
+      const result = Array.from(regulationsMap.values());
+      res.json(result);
     });
   } else {
     // Fetch regulation details
@@ -49,6 +63,8 @@ router.get('/regulations', (req, res) => {
         // Combine regulation and articles
         res.json({
           regulation_name: regulation.regulation_name,
+          competent_authority: regulation.competent_authority,
+          updated_at: regulation.updated_at,
           articles: articles
         });
       });
