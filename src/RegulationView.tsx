@@ -30,8 +30,32 @@ function RegulationView() {
       try {
         const regResponse = await fetch(`http://localhost:3000/api/regulations?law_number=${regulation_number}`);
         const regulations = await regResponse.json();
+        
+        if (regulations && regulations.articles) {
+          regulations.articles.sort((a: Article, b: Article) => {
+            if (a.chapter_id !== b.chapter_id) {
+              return a.chapter_id - b.chapter_id;
+            }
+            if (a.article_id !== b.article_id) {
+              return a.article_id - b.article_id;
+            }
+            if (a.sub_article_id !== b.sub_article_id) {
+              return (a.sub_article_id || 0) - (b.sub_article_id || 0);
+            }
+            if (a.section_id !== b.section_id) {
+              return (a.section_id || 0) - (b.section_id || 0);
+            }
+            if (a.clause_id !== b.clause_id) {
+              return (a.clause_id || 0) - (b.clause_id || 0);
+            }
+            if (a.item_id !== b.item_id) {
+              return (a.item_id || 0) - (b.item_id || 0);
+            }
+            return (a.sub_item_id || 0) - (b.sub_item_id || 0);
+          });
+        }
+        
         setRegulation(regulations || null);
-        console.log(regulations);
       } catch (error) {
         console.error('Error fetching regulation:', error);
       }
@@ -49,28 +73,33 @@ function RegulationView() {
     <div className='mx-12 my-4'>
       <div className='w-[800px] mx-auto'>
         <div className='text-center text-blue-600 text-lg my-4'>{regulation.regulation_name}</div>
+        
         {regulation.articles.map((article) => {
-          const showChapterTitle = !displayedChapters.has(article.chapter_id) && article.chapter_id !== null;
-          const showArticle = !displayedArticles.has(article.article_id) && article.article_id !== null;
-          const showSection = !displayedSections.has(article.article_id * 10 + (article.section_id ? article.section_id : 0)) && article.section_id !== null;
+          console.log(article);
+          const showChapterTitle = !displayedChapters.has(article.law_number * 10000 + article.chapter_id) && article.chapter_id !== null;
+          const showArticle = !displayedArticles.has(article.law_number * 10000 + article.article_id) && article.article_id !== null;
+          const showSection = !displayedSections.has(article.law_number * 10000 + article.article_id * 10 + (article.section_id ? article.section_id : 0)) && article.section_id !== null;
 
           if (showChapterTitle) {
-            displayedChapters.add(article.chapter_id);
+            displayedChapters.add(article.law_number * 10000 + article.chapter_id);
           }
+
           if (showArticle) {
-            displayedArticles.add(article.article_id);
+            displayedArticles.add(article.law_number * 10000 + article.article_id);
           }
+
           if (showSection) {
-            displayedSections.add(article.article_id * 10 + (article.section_id ? article.section_id : 0));
+            displayedSections.add(article.law_number * 10000 + article.article_id * 10 + (article.section_id ? article.section_id : 0));
           }
 
           return (
-            <div key={article.id} className='flex flex-col'>
+            <div
+              key={article.id}
+              className='flex flex-col'
+            >
               {showChapterTitle && <div className='font-black'>第 {article.chapter_id} 章</div>}
               <div className='flex justify-center'>
-                <div className='flex-none w-24 text-right mr-4'>
-                  {showArticle && (`第 ${article.article_id}` + (article.sub_article_id ? `-${article.sub_article_id}` : '') + ` 條`)}
-                </div>
+                <div className='flex-none w-24 text-right mr-4'>{showArticle && (`第 ${article.article_id}` + (article.sub_article_id ? `-${article.sub_article_id}` : '') + ` 條`)}</div>
                 <div className='grow flex'>
                   <div className='min-w-4'>{showSection && article.section_id}</div>
                   <div className='text-pretty'>{article.content}</div>
@@ -78,8 +107,7 @@ function RegulationView() {
               </div>
               <br />
             </div>
-          );
-        })}
+        )})}
       </div>
     </div>
   );
