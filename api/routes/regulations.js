@@ -74,32 +74,32 @@ router.get('/regulations', (req, res) => {
 
 // 新增法規
 router.post('/regulations/create', (req, res) => {
-  const { regulation_name, authority, update_date } = req.body;
+  const { regulation_name, competent_authority, updated_at } = req.body;
   
   db.run(
-    'INSERT INTO regulations (regulation_name, authority, update_date) VALUES (?, ?, ?)',
-    [regulation_name, authority, update_date],
+    'INSERT INTO regulations (regulation_name, competent_authority, updated_at) VALUES (?, ?, ?)',
+    [regulation_name, competent_authority, updated_at],
     function(err) {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      res.json({ id: this.lastID, regulation_name, authority, update_date });
+      res.json({ regulation_number: this.lastID, regulation_name, competent_authority, updated_at });
     }
   );
 });
 
 // 更新法規
 router.put('/regulations/update', (req, res) => {
-  const { id, regulation_name, authority, update_date } = req.body;
+  const { regulation_number, regulation_name, competent_authority, updated_at } = req.body;
   
   db.run(
-    'UPDATE regulations SET regulation_name = ?, authority = ?, update_date = ? WHERE id = ?',
-    [regulation_name, authority, update_date, id],
+    'UPDATE regulations SET regulation_name = ?, competent_authority = ?, updated_at = ? WHERE regulation_number = ?',
+    [regulation_name, competent_authority, updated_at, regulation_number],
     function(err) {
       if (err) {
         return res.status(500).json({ error: err.message });
       }
-      res.json({ id, regulation_name, authority, update_date });
+      res.json({ regulation_number, regulation_name, competent_authority, updated_at });
     }
   );
 });
