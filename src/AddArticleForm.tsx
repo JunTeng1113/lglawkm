@@ -50,6 +50,8 @@ const digits: { [key: string]: number } = {
   sub_item_id: 2,
 }
 
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const BulkEdit: React.FC = () => {
   const { regulationId } = useParams();
   const navigate = useNavigate();
@@ -120,7 +122,7 @@ const BulkEdit: React.FC = () => {
     // Fetch regulations for selection
     async function fetchRegulations() {
       try {
-        const response = await fetch('http://localhost:3000/api/regulations');
+        const response = await fetch(`${API_URL}/api/regulations`);
         const data = await response.json();
         setRegulations(data);
       } catch (error) {
@@ -135,7 +137,7 @@ const BulkEdit: React.FC = () => {
   async function fetchArticles() {
     if (selectedRegulation !== null) {
       try {
-        const response = await fetch(`http://localhost:3000/api/regulations?law_number=${selectedRegulation}`);
+        const response = await fetch(`${API_URL}/api/regulations?law_number=${selectedRegulation}`);
         const data = await response.json();
         
         setArticles(data.articles);
@@ -215,7 +217,7 @@ const BulkEdit: React.FC = () => {
     setTempArticles(newArticles);
 
     try {
-      const response = await fetch(`http://localhost:3000/api/delete-article`, {
+      const response = await fetch(`${API_URL}/api/delete-article`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -240,7 +242,7 @@ const BulkEdit: React.FC = () => {
       .map((article) => ({ ...article, id: generateId(article) })); // 更新時才update id
 
     try {
-      const response = await fetch('http://localhost:3000/api/bulk-update-articles', {
+      const response = await fetch(`${API_URL}/api/bulk-update-articles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -287,7 +289,7 @@ const BulkEdit: React.FC = () => {
     if (!confirmDelete) return;
 
     try {
-      const response = await fetch(`http://localhost:3000/api/bulk-delete-articles`, {
+      const response = await fetch(`${API_URL}/api/bulk-delete-articles`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -368,7 +370,7 @@ const BulkEdit: React.FC = () => {
       
       // 發送到後端
       try {
-        const response = await fetch(`http://localhost:3000/api/bulk-update-articles/${selectedRegulation}`, {
+        const response = await fetch(`${API_URL}/api/bulk-update-articles/${selectedRegulation}`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
