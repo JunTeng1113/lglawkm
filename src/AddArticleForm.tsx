@@ -478,6 +478,24 @@ const BulkEdit: React.FC = () => {
     setTempArticles(newArticles);
   };
 
+  // 檢查是否有重複的條文
+  const isDuplicate = (article: Article, index: number) => {
+    return tempArticles.some((compareArticle, compareIndex) => {
+      if (index === compareIndex) return false; // 不與自己比較
+      
+      return (
+        (article.code ?? 0) === (compareArticle.code ?? 0) &&
+        (article.chapter_id ?? 0) === (compareArticle.chapter_id ?? 0) &&
+        (article.article_id ?? 0) === (compareArticle.article_id ?? 0) &&
+        (article.sub_article_id ?? 0) === (compareArticle.sub_article_id ?? 0) &&
+        (article.section_id ?? 0) === (compareArticle.section_id ?? 0) &&
+        (article.clause_id ?? 0) === (compareArticle.clause_id ?? 0) &&
+        (article.item_id ?? 0) === (compareArticle.item_id ?? 0) &&
+        (article.sub_item_id ?? 0) === (compareArticle.sub_item_id ?? 0)
+      );
+    });
+  };
+
   return (
     <div className='m-4'>
       <Toaster 
@@ -663,174 +681,161 @@ const BulkEdit: React.FC = () => {
                   return 0;
                 })
                 .map((article, index) => {
-                  const originalArticle = articles.find(a => a.uuid === article.uuid);
-                  const hasChanges = originalArticle && (
-                    article.code !== originalArticle.code ||
-                    article.chapter_id !== originalArticle.chapter_id ||
-                    article.article_id !== originalArticle.article_id ||
-                    article.sub_article_id !== originalArticle.sub_article_id ||
-                    article.section_id !== originalArticle.section_id ||
-                    article.clause_id !== originalArticle.clause_id ||
-                    article.item_id !== originalArticle.item_id ||
-                    article.sub_item_id !== originalArticle.sub_item_id ||
-                    article.content !== originalArticle.content
-                  );
+                  const isDuplicateArticle = isDuplicate(article, index);
 
                   return (
                     <div 
                       key={article.uuid} 
-                      className="border-b"
+                      className={`border-b ${isDuplicateArticle ? 'bg-red-100' : ''}`}
                       onMouseEnter={() => setHoveredIndex(index)}
                       onMouseLeave={() => setHoveredIndex(null)}
                     >
                       <div className="flex gap-1 items-center">
-                        {!foldSet.has('code') && (
-                        <div className='w-12'>
-                          <input 
-                            type="number" 
-                            id="code" 
-                            name="code"
-                            className="bg-gray-50 border border -gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article?.code}
-                            onChange={(e) => handleInputChange(article?.uuid, e)}
-                            placeholder="編"
-                          />
-                        </div>
-                        )}
-                        {!foldSet.has('chapter_id') && (
-                        <div className='w-12'>
-                          <input 
-                            type="number" 
-                            id="chapter_id"
-                            name="chapter_id"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article.chapter_id}
-                            onChange={(e) => handleInputChange(article.uuid, e)}
-                            placeholder="章"
-                          />
-                        </div>
-                        )}
-                        {!foldSet.has('article_id') && (
-                        <div className='w-12'>
-                          <input 
-                            type="number" 
-                            id="article_id" 
-                            name="article_id"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article.article_id}
-                            onChange={(e) => handleInputChange(article.uuid, e)}
-                            placeholder="條"
-                          />
-                        </div>
-                        )}
-                        {!foldSet.has('sub_article_id') && (
-                        <div className='w-12'>
-                          <input 
-                            type="number" 
-                            id="sub_article_id" 
-                            name="sub_article_id"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article.sub_article_id}
-                            onChange={(e) => handleInputChange(article.uuid, e)}
-                            placeholder="條之"
-                          />
-                        </div>
-                        )}
-                        {!foldSet.has('section_id') && (
-                        <div className='w-12'>
-                          <input 
-                            type="number" 
-                            id="section_id" 
-                            name="section_id"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article.section_id}
-                            onChange={(e) => handleInputChange(article.uuid, e)}
-                            placeholder="項"
-                          />
-                        </div>
-                        )}
-                        {!foldSet.has('clause_id') && (
-                        <div className='w-12'>
-                          <input 
-                            type="number" 
-                            id="clause_id" 
-                            name="clause_id"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article.clause_id}
-                            onChange={(e) => handleInputChange(article.uuid, e)}
-                            placeholder="款"
-                          />
-                        </div>
-                        )}
-                        {!foldSet.has('item_id') && (
-                        <div className='w-12'>
-                          <input 
-                            type="number" 
-                            id="item_id" 
-                            name="item_id"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article.item_id}
-                            onChange={(e) => handleInputChange(article.uuid, e)}
-                            placeholder="目"
-                          />
-                        </div>
-                        )}
-                        {!foldSet.has('sub_item_id') && (
-                        <div className='w-12'>
-                          <input 
-                            type="number" 
-                            id="sub_item_id" 
-                            name="sub_item_id"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article.sub_item_id}
-                            onChange={(e) => handleInputChange(article.uuid, e)}
-                            placeholder="目之○"
-                          />
-                        </div>
-                        )}
-                        <div className='w-[800px]'>
-                          <input
-                            type="text"
-                            id="content"
-                            name="content"
-                            className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-                            value={article.content}
-                            onChange={(e) => handleInputChange(article.uuid, e)}
-                            placeholder="條文內容"
-                          />
-                        </div>
-                        <button
-                          type="button"
-                          className="bg-red-500 text-white px-4 py-2 rounded-md"
-                          onClick={() => handleRemoveRow(index!, article?.uuid)}
-                        >
-                          刪除
-                        </button>
-                        {hoveredIndex === index && (
-                          <>
-                            <button
-                              className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
-                              onClick={() => handleInsertAbove(index)}
-                            >
-                              向上插入
-                            </button>
-                            <button
-                              className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
-                              onClick={() => handleInsertBelow(index)}
-                            >
-                              向下插入
-                            </button>
-                          </>
-                        )}
-                        {hasChanges && (
+                        <div className={"flex gap-1"}>
+                          {!foldSet.has('code') && (
+                            <div className='w-12'>
+                              <input 
+                                type="number" 
+                                id="code" 
+                                name="code"
+                                className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                                value={article.code}
+                                onChange={(e) => handleInputChange(article.uuid, e)}
+                                placeholder="編"
+                              />
+                            </div>
+                          )}
+                          {!foldSet.has('chapter_id') && (
+                          <div className='w-12'>
+                            <input 
+                              type="number" 
+                              id="chapter_id"
+                              name="chapter_id"
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              value={article.chapter_id}
+                              onChange={(e) => handleInputChange(article.uuid, e)}
+                              placeholder="章"
+                            />
+                          </div>
+                          )}
+                          {!foldSet.has('article_id') && (
+                          <div className='w-12'>
+                            <input 
+                              type="number" 
+                              id="article_id" 
+                              name="article_id"
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              value={article.article_id}
+                              onChange={(e) => handleInputChange(article.uuid, e)}
+                              placeholder="條"
+                            />
+                          </div>
+                          )}
+                          {!foldSet.has('sub_article_id') && (
+                          <div className='w-12'>
+                            <input 
+                              type="number" 
+                              id="sub_article_id" 
+                              name="sub_article_id"
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              value={article.sub_article_id}
+                              onChange={(e) => handleInputChange(article.uuid, e)}
+                              placeholder="條之"
+                            />
+                          </div>
+                          )}
+                          {!foldSet.has('section_id') && (
+                          <div className='w-12'>
+                            <input 
+                              type="number" 
+                              id="section_id" 
+                              name="section_id"
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              value={article.section_id}
+                              onChange={(e) => handleInputChange(article.uuid, e)}
+                              placeholder="項"
+                            />
+                          </div>
+                          )}
+                          {!foldSet.has('clause_id') && (
+                          <div className='w-12'>
+                            <input 
+                              type="number" 
+                              id="clause_id" 
+                              name="clause_id"
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              value={article.clause_id}
+                              onChange={(e) => handleInputChange(article.uuid, e)}
+                              placeholder="款"
+                            />
+                          </div>
+                          )}
+                          {!foldSet.has('item_id') && (
+                          <div className='w-12'>
+                            <input 
+                              type="number" 
+                              id="item_id" 
+                              name="item_id"
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              value={article.item_id}
+                              onChange={(e) => handleInputChange(article.uuid, e)}
+                              placeholder="目"
+                            />
+                          </div>
+                          )}
+                          {!foldSet.has('sub_item_id') && (
+                          <div className='w-12'>
+                            <input 
+                              type="number" 
+                              id="sub_item_id" 
+                              name="sub_item_id"
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              value={article.sub_item_id}
+                              onChange={(e) => handleInputChange(article.uuid, e)}
+                              placeholder="目之○"
+                            />
+                          </div>
+                          )}
+                          <div className='w-[800px]'>
+                            <input
+                              type="text"
+                              id="content"
+                              name="content"
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              value={article.content}
+                              onChange={(e) => handleInputChange(article.uuid, e)}
+                              placeholder="條文內容"
+                            />
+                          </div>
                           <button
                             type="button"
-                            className="bg-blue-500 text-white px-4 py-2 rounded-md"
-                            onClick={() => handleUpdateRow(article.uuid)}
+                            className="bg-red-500 text-white px-4 py-2 rounded-md"
+                            onClick={() => handleRemoveRow(index!, article?.uuid)}
                           >
-                            Save
+                            刪除
                           </button>
-                        )}
+                          {hoveredIndex === index && (
+                            <>
+                              <button
+                                className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
+                                onClick={() => handleInsertAbove(index)}
+                              >
+                                向上插入
+                              </button>
+                              <button
+                                className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
+                                onClick={() => handleInsertBelow(index)}
+                              >
+                                向下插入
+                              </button>
+                            </>
+                          )}
+                          {isDuplicateArticle && (
+                            <div className="text-red-500 text-sm ml-2 flex items-center">
+                              警告：此條文編號與其他條文重複
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
