@@ -126,6 +126,11 @@ const RegulationManager: React.FC = () => {
     navigate(`/bulk-edit/${regulation.regulation_number}`);
   };
 
+  // 添加查閱條文的處理函數
+  const handleViewArticles = (regulation: Regulation) => {
+    navigate(`/select-law/${regulation.regulation_number}`);
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -163,7 +168,14 @@ const RegulationManager: React.FC = () => {
                 <tbody className="bg-white divregulation_numbere-y divregulation_numbere-gray-200">
                   {regulations.map((regulation) => (
                     <tr key={regulation.regulation_number}>
-                      <td className="px-6 py-4 whitespace-nowrap">{regulation.regulation_name}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <button
+                          onClick={() => navigate(`/regulation/${regulation.regulation_number}`)}
+                          className="text-blue-600 hover:text-blue-800 hover:underline text-left"
+                        >
+                          {regulation.regulation_name}
+                        </button>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap">{regulation.competent_authority}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{regulation.updated_at}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
