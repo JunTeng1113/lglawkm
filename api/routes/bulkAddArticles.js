@@ -19,7 +19,7 @@ router.post('/bulk-add-articles', (req, res) => {
 
   const placeholders = articles.map(() => '(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)').join(',');
   const values = articles.flatMap(article => [
-    article.id,
+    article.uuid || generateUUID(),
     article.code,
     article.chapter_id,
     article.article_id,
@@ -34,7 +34,7 @@ router.post('/bulk-add-articles', (req, res) => {
 
   const sql = `
     INSERT INTO constitution_articles (
-      id, code, chapter_id, article_id, sub_article_id, section_id, 
+      uuid, code, chapter_id, article_id, sub_article_id, section_id, 
       clause_id, item_id, sub_item_id, content, law_number
     ) VALUES ${placeholders}
   `;

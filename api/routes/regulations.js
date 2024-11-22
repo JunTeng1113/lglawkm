@@ -10,7 +10,7 @@ router.get('/regulations', (req, res) => {
 
   if (lawNumber === undefined) {
     // Fetch all regulations
-    db.all('SELECT * FROM constitution_articles, regulations WHERE constitution_articles.law_number = regulations.regulation_number ORDER BY id', (err, articles) => {
+    db.all('SELECT * FROM constitution_articles, regulations WHERE constitution_articles.law_number = regulations.regulation_number ORDER BY uuid', (err, articles) => {
       if (err) {
         return res.status(500).json({ error: err.message });
       }

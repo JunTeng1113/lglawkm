@@ -25,7 +25,7 @@ const RegulationManager: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const endpoint = isEditing ? '/api/regulations/update' : '/api/regulations/create';
+      const endpoint = isEditing ? '/api/regulations/update' : 'ccreate';
       const method = isEditing ? 'PUT' : 'POST';
       const body = isEditing ? { ...formData, regulation_number: selectedRegulation?.regulation_number } : formData;
 
@@ -47,7 +47,7 @@ const RegulationManager: React.FC = () => {
       setSelectedRegulation(null);
       
       // 重新獲取法規列表
-      const updatedData = await fetch('http://localhost:3000/api/regulations').then(res => res.json());
+      const updatedData = await fetch('c').then(res => res.json());
       setRegulations(updatedData);
       
     } catch (error) {
