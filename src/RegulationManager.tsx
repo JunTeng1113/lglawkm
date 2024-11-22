@@ -22,6 +22,9 @@ const RegulationManager: React.FC = () => {
     updated_at: ''
   });
 
+  // 修改 API 地址使用环境变量
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -40,7 +43,7 @@ const RegulationManager: React.FC = () => {
             updated_at: formData.updated_at
           };
 
-      const response = await fetch(`http://localhost:3000${endpoint}`, {
+      const response = await fetch(`${API_URL}${endpoint}`, {
         method,
         headers: {
           'Content-Type': 'application/json',
@@ -58,7 +61,7 @@ const RegulationManager: React.FC = () => {
       setSelectedRegulation(null);
       
       // 重新獲取法規列表
-      const updatedData = await fetch('http://localhost:3000/api/regulations').then(res => res.json());
+      const updatedData = await fetch(`${API_URL}/api/regulations`).then(res => res.json());
       setRegulations(updatedData);
       
     } catch (error) {
@@ -75,7 +78,7 @@ const RegulationManager: React.FC = () => {
   const confirmDelete = async () => {
     if (deleteConfirmText === selectedRegulation?.regulation_name) {
       try {
-        const response = await fetch(`http://localhost:3000/api/regulations/delete`, {
+        const response = await fetch(`${API_URL}/api/regulations/delete`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -93,7 +96,7 @@ const RegulationManager: React.FC = () => {
         setSelectedRegulation(null);
 
         // 重新獲取法規列表
-        const updatedData = await fetch('http://localhost:3000/api/regulations').then(res => res.json());
+        const updatedData = await fetch(`${API_URL}/api/regulations`).then(res => res.json());
         setRegulations(updatedData);
 
       } catch (error) {
@@ -107,7 +110,7 @@ const RegulationManager: React.FC = () => {
   useEffect(() => {
     const fetchRegulations = async () => {
       try {
-        const response = await fetch('http://localhost:3000/api/regulations');
+        const response = await fetch(`${API_URL}/api/regulations`);
         const data = await response.json();
         setRegulations(data);
       } catch (error) {
