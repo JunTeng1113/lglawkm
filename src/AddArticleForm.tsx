@@ -174,32 +174,6 @@ const BulkEdit: React.FC = () => {
     setTempArticles(newArticles);
   };
 
-  const handleAddRow = () => {
-    const newArticle = { ...initialArticle,
-      // 如果 編 不為空值 且 章 為空值 則 設定 編為 前項的編+1
-      code: (currentArticle?.code ?? 0) && !currentArticle?.chapter_id ? (currentArticle?.code ?? 0) : currentArticle?.code,
-      // 如果 章 不為空值 且 條 為空值 則 設定 章為 前項的章+1
-      chapter_id: (currentArticle?.chapter_id ?? 0) && !currentArticle?.article_id ? (currentArticle?.chapter_id ?? 0) : currentArticle?.chapter_id,
-      // 如果 條 不為空值 則 設定 條為 前項的條+1
-      article_id: (currentArticle?.article_id ?? 0) && !currentArticle?.section_id ? (currentArticle?.article_id ?? 0) : currentArticle?.article_id,
-      // 如果 條次 不為空值 則 設定 條次為 前項的條次+1
-      sub_article_id: (currentArticle?.sub_article_id ?? 0) && !currentArticle?.section_id ? (currentArticle?.sub_article_id ?? 0) : currentArticle?.sub_article_id,
-      // 如果 項 不為空值 則 設定 項為 前項的項+1
-      section_id: (currentArticle?.section_id ?? 0) && !currentArticle?.clause_id ? (currentArticle?.section_id ?? 0) : currentArticle?.section_id,
-      // 如果 款 不為空值 則 設定 款為 前項的款+1
-      clause_id: (currentArticle?.clause_id ?? 0) && !currentArticle?.item_id ? (currentArticle?.clause_id ?? 0) : currentArticle?.clause_id,
-      // 如果 目 不為空值 則 設定 目為 前項的目+1
-      item_id: (currentArticle?.item_id ?? 0) && !currentArticle?.sub_item_id ? (currentArticle?.item_id ?? 0) : currentArticle?.item_id,
-      // 如果 目之 不為空值 則 設定 目之為 前項的目之+1
-      sub_item_id: (currentArticle?.sub_item_id ?? undefined) && (currentArticle?.sub_item_id ?? 0),
-      uuid: generateUUID(),
-      law_number: selectedRegulation ?? 4999 // 4999作為錯誤值
-    };
-
-    setTempArticles([...tempArticles, {...newArticle, id: generateId(newArticle)}]
-    );
-  };
-
   const handleRemoveRow = async (uuid: string) => {
     if (deleteConfirm) {
       const confirmDelete = window.confirm('確定要刪除這條文章嗎？');
@@ -1048,13 +1022,6 @@ const BulkEdit: React.FC = () => {
                     </div>
                   );
                 })}
-              <button
-                type="button"
-                className="bg-green-500 text-white px-4 py-2 rounded-md mb-4"
-                onClick={handleAddRow}
-              >
-                Add Another Row
-              </button>
             </div>
           )}
         </form>
