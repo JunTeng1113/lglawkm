@@ -177,21 +177,21 @@ const BulkEdit: React.FC = () => {
   const handleAddRow = () => {
     const newArticle = { ...initialArticle,
       // 如果 編 不為空值 且 章 為空值 則 設定 編為 前項的編+1
-      code: (tempArticles[tempArticles.length - 1]?.code ?? 0) && !tempArticles[tempArticles.length - 1]?.chapter_id ? (tempArticles[tempArticles.length - 1]?.code ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.code,
+      code: (currentArticle?.code ?? 0) && !currentArticle?.chapter_id ? (currentArticle?.code ?? 0) : currentArticle?.code,
       // 如果 章 不為空值 且 條 為空值 則 設定 章為 前項的章+1
-      chapter_id: (tempArticles[tempArticles.length - 1]?.chapter_id ?? 0) && !tempArticles[tempArticles.length - 1]?.article_id ? (tempArticles[tempArticles.length - 1]?.chapter_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.chapter_id,
+      chapter_id: (currentArticle?.chapter_id ?? 0) && !currentArticle?.article_id ? (currentArticle?.chapter_id ?? 0) : currentArticle?.chapter_id,
       // 如果 條 不為空值 則 設定 條為 前項的條+1
-      article_id: (tempArticles[tempArticles.length - 1]?.article_id ?? 0) && !tempArticles[tempArticles.length - 1]?.section_id ? (tempArticles[tempArticles.length - 1]?.article_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.article_id,
+      article_id: (currentArticle?.article_id ?? 0) && !currentArticle?.section_id ? (currentArticle?.article_id ?? 0) : currentArticle?.article_id,
       // 如果 條次 不為空值 則 設定 條次為 前項的條次+1
-      sub_article_id: (tempArticles[tempArticles.length - 1]?.sub_article_id ?? 0) && !tempArticles[tempArticles.length - 1]?.section_id ? (tempArticles[tempArticles.length - 1]?.sub_article_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.sub_article_id,
+      sub_article_id: (currentArticle?.sub_article_id ?? 0) && !currentArticle?.section_id ? (currentArticle?.sub_article_id ?? 0) : currentArticle?.sub_article_id,
       // 如果 項 不為空值 則 設定 項為 前項的項+1
-      section_id: (tempArticles[tempArticles.length - 1]?.section_id ?? 0) && !tempArticles[tempArticles.length - 1]?.clause_id ? (tempArticles[tempArticles.length - 1]?.section_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.section_id,
+      section_id: (currentArticle?.section_id ?? 0) && !currentArticle?.clause_id ? (currentArticle?.section_id ?? 0) : currentArticle?.section_id,
       // 如果 款 不為空值 則 設定 款為 前項的款+1
-      clause_id: (tempArticles[tempArticles.length - 1]?.clause_id ?? 0) && !tempArticles[tempArticles.length - 1]?.item_id ? (tempArticles[tempArticles.length - 1]?.clause_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.clause_id,
+      clause_id: (currentArticle?.clause_id ?? 0) && !currentArticle?.item_id ? (currentArticle?.clause_id ?? 0) : currentArticle?.clause_id,
       // 如果 目 不為空值 則 設定 目為 前項的目+1
-      item_id: (tempArticles[tempArticles.length - 1]?.item_id ?? 0) && !tempArticles[tempArticles.length - 1]?.sub_item_id ? (tempArticles[tempArticles.length - 1]?.item_id ?? 0) + 1 : tempArticles[tempArticles.length - 1]?.item_id,
+      item_id: (currentArticle?.item_id ?? 0) && !currentArticle?.sub_item_id ? (currentArticle?.item_id ?? 0) : currentArticle?.item_id,
       // 如果 目之 不為空值 則 設定 目之為 前項的目之+1
-      sub_item_id: (tempArticles[tempArticles.length - 1]?.sub_item_id ?? undefined) && (tempArticles[tempArticles.length - 1]?.sub_item_id ?? 0) + 1,
+      sub_item_id: (currentArticle?.sub_item_id ?? undefined) && (currentArticle?.sub_item_id ?? 0),
       uuid: generateUUID(),
       law_number: selectedRegulation ?? 4999 // 4999作為錯誤值
     };
@@ -200,7 +200,7 @@ const BulkEdit: React.FC = () => {
     );
   };
 
-  const handleRemoveRow = async (index: number, uuid: string) => {
+  const handleRemoveRow = async (uuid: string) => {
     if (deleteConfirm) {
       const confirmDelete = window.confirm('確定要刪除這條文章嗎？');
       if (!confirmDelete) {
@@ -221,9 +221,7 @@ const BulkEdit: React.FC = () => {
       });
 
       // 先更新本地狀態
-      const newArticles = [...tempArticles];
-      newArticles.splice(index, 1);
-      setTempArticles(newArticles);
+      handleDelete(uuid);
 
       if (response.ok) {
         // 成功時更新 toast
@@ -467,47 +465,61 @@ const BulkEdit: React.FC = () => {
   };
 
   // 添加向上插入一列的函數
-  const handleInsertAbove = (index: number) => {
-    const currentArticle = tempArticles[index];
-    const newArticle = {
-      ...initialArticle,
+  const handleInsertAbove = (uuid: string) => {
+    const currentArticle = tempArticles.find(article => article.uuid === uuid);
+    if (!currentArticle) return;
+    
+    const newArticle = { ...initialArticle,
+      // 如果 編 不為空值 且 章 為空值 則 設定 編為 前項的編+1
+      code: (currentArticle?.code ?? 0) && !currentArticle?.chapter_id ? (currentArticle?.code ?? 0) : currentArticle?.code,
+      // 如果 章 不為空值 且 條 為空值 則 設定 章為 前項的章+1
+      chapter_id: (currentArticle?.chapter_id ?? 0) && !currentArticle?.article_id ? (currentArticle?.chapter_id ?? 0) : currentArticle?.chapter_id,
+      // 如果 條 不為空值 則 設定 條為 前項的條+1
+      article_id: (currentArticle?.article_id ?? 0) && !(currentArticle?.sub_article_id ?? 0) && !currentArticle?.section_id ? (currentArticle?.article_id ?? 0) : currentArticle?.article_id,
+      // 如果 條次 不為空值 則 設定 條次為 前項的條次+1
+      sub_article_id: (currentArticle?.sub_article_id ?? 0) && !currentArticle?.section_id ? (currentArticle?.sub_article_id ?? 0) : currentArticle?.sub_article_id,
+      // 如果 項 不為空值 則 設定 項為 前項的項+1
+      section_id: (currentArticle?.section_id ?? 0) && !currentArticle?.clause_id ? (currentArticle?.section_id ?? 0) : currentArticle?.section_id,
+      // 如果 款 不為空值 則 設定 款為 前項的款+1
+      clause_id: (currentArticle?.clause_id ?? 0) && !currentArticle?.item_id ? (currentArticle?.clause_id ?? 0) : currentArticle?.clause_id,
+      // 如果 目 不為空值 則 設定 目為 前項的目+1
+      item_id: (currentArticle?.item_id ?? 0) && !currentArticle?.sub_item_id ? (currentArticle?.item_id ?? 0) : currentArticle?.item_id,
+      // 如果 目之 不為空值 則 設定 目之為 前項的目之+1
+      sub_item_id: (currentArticle?.sub_item_id ?? undefined) && (currentArticle?.sub_item_id ?? 0),
       uuid: generateUUID(),
-      // 複製當前行的所有層級值
-      code: currentArticle.code,
-      chapter_id: currentArticle.chapter_id,
-      article_id: currentArticle.article_id,
-      sub_article_id: currentArticle.sub_article_id,
-      section_id: currentArticle.section_id,
-      clause_id: currentArticle.clause_id,
-      item_id: currentArticle.item_id,
-      sub_item_id: currentArticle.sub_item_id,
+      law_number: selectedRegulation ?? 4999 // 4999作為錯誤值
     };
     
-    const newArticles = [...tempArticles];
-    newArticles.splice(index, 0, newArticle);
-    setTempArticles(newArticles);
+    setTempArticles([...tempArticles, {...newArticle, id: generateId(newArticle)}]);
   };
 
   // 添加向下插入一列的函數
-  const handleInsertBelow = (index: number) => {
-    const currentArticle = tempArticles[index];
-    const newArticle = {
-      ...initialArticle,
+  const handleInsertBelow = (uuid: string) => {
+    const currentArticle = tempArticles.find(article => article.uuid === uuid);
+    if (!currentArticle) return;
+    
+    const newArticle = { ...initialArticle,
+      // 如果 編 不為空值 且 章 為空值 則 設定 編為 前項的編+1
+      code: (currentArticle?.code ?? 0) && !currentArticle?.chapter_id ? (currentArticle?.code ?? 0) : currentArticle?.code,
+      // 如果 章 不為空值 且 條 為空值 則 設定 章為 前項的章+1
+      chapter_id: (currentArticle?.chapter_id ?? 0) && !currentArticle?.article_id ? (currentArticle?.chapter_id ?? 0) : currentArticle?.chapter_id,
+      // 如果 條 不為空值 則 設定 條為 前項的條+1
+      article_id: (currentArticle?.article_id ?? 0) && !(currentArticle?.sub_article_id ?? 0) && !currentArticle?.section_id ? (currentArticle?.article_id ?? 0) : currentArticle?.article_id,
+      // 如果 條次 不為空值 則 設定 條次為 前項的條次+1
+      sub_article_id: (currentArticle?.sub_article_id ?? 0) && !currentArticle?.section_id ? (currentArticle?.sub_article_id ?? 0) : currentArticle?.sub_article_id,
+      // 如果 項 不為空值 則 設定 項為 前項的項+1
+      section_id: (currentArticle?.section_id ?? 0) && !currentArticle?.clause_id ? (currentArticle?.section_id ?? 0) : currentArticle?.section_id,
+      // 如果 款 不為空值 則 設定 款為 前項的款+1
+      clause_id: (currentArticle?.clause_id ?? 0) && !currentArticle?.item_id ? (currentArticle?.clause_id ?? 0) : currentArticle?.clause_id,
+      // 如果 目 不為空值 則 設定 目為 前項的目+1
+      item_id: (currentArticle?.item_id ?? 0) && !currentArticle?.sub_item_id ? (currentArticle?.item_id ?? 0) : currentArticle?.item_id,
+      // 如果 目之 不為空值 則 設定 目之為 前項的目之+1
+      sub_item_id: (currentArticle?.sub_item_id ?? undefined) && (currentArticle?.sub_item_id ?? 0),
       uuid: generateUUID(),
-      // 複製當前行的所有層級值
-      code: currentArticle.code,
-      chapter_id: currentArticle.chapter_id,
-      article_id: currentArticle.article_id,
-      sub_article_id: currentArticle.sub_article_id,
-      section_id: currentArticle.section_id,
-      clause_id: currentArticle.clause_id,
-      item_id: currentArticle.item_id,
-      sub_item_id: currentArticle.sub_item_id,
+      law_number: selectedRegulation ?? 4999 // 4999作為錯誤值
     };
     
-    const newArticles = [...tempArticles];
-    newArticles.splice(index + 1, 0, newArticle);
-    setTempArticles(newArticles);
+    setTempArticles([...tempArticles, {...newArticle, id: generateId(newArticle)}]);
   };
 
   // 檢查是否有重複的條文
@@ -650,6 +662,11 @@ const BulkEdit: React.FC = () => {
     ];
     
     return fields.filter(f => article[f.key as keyof Article] !== originalArticle[f.key as keyof Article]);
+  };
+
+  const handleDelete = (uuid: string) => {
+    const newArticles = tempArticles.filter(article => article.uuid !== uuid);
+    setTempArticles(newArticles);
   };
 
   return (
@@ -846,6 +863,11 @@ const BulkEdit: React.FC = () => {
                   if ((a.sub_item_id ?? 0) !== (b.sub_item_id ?? 0)) {
                     return (a.sub_item_id ?? 0) - (b.sub_item_id ?? 0);
                   }
+                  // 條文內容空白優先
+                  if (a.content !== b.content) {
+                    return a.content.length + b.content.length;
+                  }
+
                   return 0;
                 })
                 .map((article, index) => {
@@ -985,19 +1007,21 @@ const BulkEdit: React.FC = () => {
                                 <button
                                   type="button"
                                   className="bg-red-500 text-white px-4 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
-                                  onClick={() => handleRemoveRow(index!, article?.uuid)}
+                                  onClick={() => handleRemoveRow(article?.uuid)}
                                 >
                                   刪除
                                 </button>
-                                <button
+                                {/* <button
+                                  type="button"
                                   className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
-                                  onClick={() => handleInsertAbove(index)}
+                                  onClick={() => handleInsertAbove(article?.uuid)}
                                 >
                                   向上插入
-                                </button>
+                                </button> */}
                                 <button
+                                  type="button"
                                   className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
-                                  onClick={() => handleInsertBelow(index)}
+                                  onClick={() => handleInsertBelow(article?.uuid)}
                                 >
                                   向下插入
                                 </button>
