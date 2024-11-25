@@ -321,6 +321,7 @@ const BulkEdit: React.FC = () => {
       .sort((a, b) => a.id > b.id ? 1 : -1)
       .map(article => {
         const fields = [
+          article.uuid,
           article.code,
           article.chapter_id,
           article.article_id,
@@ -342,6 +343,7 @@ const BulkEdit: React.FC = () => {
       const rows = bulkEditText.split('\n').filter(row => row.trim());
       const newArticles = rows.map(row => {
         const [
+          uuid,
           code,
           chapter_id,
           article_id,
@@ -355,7 +357,7 @@ const BulkEdit: React.FC = () => {
 
         const article = {
           ...initialArticle,
-          uuid: generateUUID(),
+          uuid: uuid && isValidUUID(uuid) ? uuid : generateUUID(),
           code: code ? Number(code) : undefined,
           chapter_id: chapter_id ? Number(chapter_id) : undefined,
           article_id: article_id ? Number(article_id) : undefined,
@@ -503,6 +505,126 @@ const BulkEdit: React.FC = () => {
     setdeleteConfirm(!deleteConfirm);
   };
 
+  // 添加 UUID 驗證函數
+  function isValidUUID(uuid: string): boolean {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
+  }
+
+  // 新增切換編輯模式的處理函數
+  const toggleBulkEditMode = () => {
+    if (bulkEditMode) {
+      // 從批量編輯模式切換回一般模式
+      try {
+        const rows = bulkEditText.split('\n').filter(row => row.trim());
+        const newArticles = rows.map(row => {
+          const [
+            uuid,
+            code,
+            chapter_id,
+            article_id,
+            sub_article_id,
+            section_id,
+            clause_id,
+            item_id,
+            sub_item_id,
+            content
+          ] = row.split('\t');
+
+          return {
+            ...initialArticle,
+            uuid: uuid && isValidUUID(uuid) ? uuid : generateUUID(),
+            code: code ? Number(code) : undefined,
+            chapter_id: chapter_id ? Number(chapter_id) : undefined,
+            article_id: article_id ? Number(article_id) : undefined,
+            sub_article_id: sub_article_id ? Number(sub_article_id) : undefined,
+            section_id: section_id ? Number(section_id) : undefined,
+            clause_id: clause_id ? Number(clause_id) : undefined,
+            item_id: item_id ? Number(item_id) : undefined,
+            sub_item_id: sub_item_id ? Number(sub_item_id) : undefined,
+            content: content || '',
+            law_number: selectedRegulation ?? undefined,
+            id: '' // 稍後會生成
+          };
+        });
+
+        // 為每個條文生成 id
+        const articlesWithIds = newArticles.map(article => ({
+          ...article,
+          id: generateId(article)
+        }));
+
+        setTempArticles(articlesWithIds);
+      } catch (error) {
+        alert('批量編輯格式錯誤，無法切換回一般模式');
+        console.error('Error parsing bulk edit text:', error);
+        return; // 如果解析失敗，不切換模式
+      }
+    }
+    setBulkEditMode(!bulkEditMode);
+  };
+
+  // 檢查條文是否被修改過
+  const isArticleModified = (article: Article, uuid: string) => {
+    const originalArticle = articles.find(a => a.uuid === uuid);
+    if (!originalArticle) return true; // 新增的條文
+    
+    // 將 undefined 和 null 轉換為 0 進行比較
+    const normalize = (value: number | undefined | null | '') => (!value ? 0 : value);
+    // 比較所有相關欄位
+    return (
+      normalize(article.code) !== normalize(originalArticle.code) ||
+      normalize(article.chapter_id) !== normalize(originalArticle.chapter_id) ||
+      normalize(article.article_id) !== normalize(originalArticle.article_id) ||
+      normalize(article.sub_article_id) !== normalize(originalArticle.sub_article_id) ||
+      normalize(article.section_id) !== normalize(originalArticle.section_id) ||
+      normalize(article.clause_id) !== normalize(originalArticle.clause_id) ||
+      normalize(article.item_id) !== normalize(originalArticle.item_id) ||
+      normalize(article.sub_item_id) !== normalize(originalArticle.sub_item_id) ||
+      String(article.content) !== String(originalArticle.content)
+    );
+  };
+
+  // 添加復原功能
+  const handleRestore = (article: Article) => {
+    const originalArticle = articles.find(a => a.uuid === article.uuid);
+    
+    if (!originalArticle) return;
+    
+    const newArticles = tempArticles.map(a => {
+      if (a.uuid === article.uuid) {
+        return {
+          ...originalArticle,
+          uuid: originalArticle.uuid // 確保 UUID 不變
+        };
+      }
+      return a;
+    });
+    
+    setTempArticles(newArticles);
+    toast.success('已復原到修改前狀態');
+  };
+
+  // 在渲染条文之前添加这个函数
+  const getModifiedFields = (article: Article, uuid: string) => {
+    const originalArticle = articles.find(a => a.uuid === uuid);
+    if (!originalArticle) return [];
+    
+    const fields = [
+      { key: 'code', label: '編' },
+      { key: 'chapter_id', label: '章' },
+      { key: 'article_id', label: '條' },
+      { key: 'sub_article_id', label: '條之' },
+      { key: 'section_id', label: '項' },
+      { key: 'clause_id', label: '款' },
+      { key: 'item_id', label: '目' },
+      { key: 'sub_item_id', label: '目之' },
+      { key: 'content', label: '內容' }
+    ];
+    
+    return fields.filter(f => article[f.key as keyof Article] !== originalArticle[f.key as keyof Article]);
+  };
+
   return (
     <div className='m-4'>
       <Toaster 
@@ -574,10 +696,10 @@ const BulkEdit: React.FC = () => {
             {isPreviewMode ? '返回編輯' : '預覽'}
           </button>
           <button 
-            onClick={bulkEditMode ? handleBulkEditSave : handleBulkEdit}
+            onClick={bulkEditMode ? toggleBulkEditMode : handleBulkEdit}
             className="bg-purple-500 text-white px-4 py-2 rounded"
           >
-            {bulkEditMode ? '保存批量編輯' : '批量編輯'}
+            {bulkEditMode ? '返回一般模式' : '批量編輯'}
           </button>
         </div>
       </div>
@@ -701,15 +823,17 @@ const BulkEdit: React.FC = () => {
                 })
                 .map((article, index) => {
                   const isDuplicateArticle = isDuplicate(article, index);
-
+                  const isModified = isArticleModified(article, article.uuid);
+                  
+                  const modifiedFields = getModifiedFields(article, article.uuid);
+                  
                   return (
-                    <div 
-                      key={article.uuid} 
-                      className={`border-b ${isDuplicateArticle ? 'bg-red-100' : ''}`}
-                      onMouseEnter={() => setHoveredIndex(index)}
-                      onMouseLeave={() => setHoveredIndex(null)}
-                    >
-                      <div className="flex gap-1 items-center">
+                    <div key={article.uuid} className="border-b">
+                      <div 
+                        onMouseEnter={() => setHoveredIndex(index)}
+                        onMouseLeave={() => setHoveredIndex(null)}
+                        className="flex gap-1 items-center"
+                      >
                         <div className={"flex gap-1"}>
                           {!foldSet.has('code') && (
                             <div className='w-12'>
@@ -717,7 +841,7 @@ const BulkEdit: React.FC = () => {
                                 type="number" 
                                 id="code" 
                                 name="code"
-                                className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                                className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                                 value={article.code}
                                 onChange={(e) => handleInputChange(article.uuid, e)}
                                 placeholder="編"
@@ -730,7 +854,7 @@ const BulkEdit: React.FC = () => {
                               type="number" 
                               id="chapter_id"
                               name="chapter_id"
-                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                               value={article.chapter_id}
                               onChange={(e) => handleInputChange(article.uuid, e)}
                               placeholder="章"
@@ -743,7 +867,7 @@ const BulkEdit: React.FC = () => {
                               type="number" 
                               id="article_id" 
                               name="article_id"
-                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                               value={article.article_id}
                               onChange={(e) => handleInputChange(article.uuid, e)}
                               placeholder="條"
@@ -756,7 +880,7 @@ const BulkEdit: React.FC = () => {
                               type="number" 
                               id="sub_article_id" 
                               name="sub_article_id"
-                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                               value={article.sub_article_id}
                               onChange={(e) => handleInputChange(article.uuid, e)}
                               placeholder="條之"
@@ -769,7 +893,7 @@ const BulkEdit: React.FC = () => {
                               type="number" 
                               id="section_id" 
                               name="section_id"
-                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                               value={article.section_id}
                               onChange={(e) => handleInputChange(article.uuid, e)}
                               placeholder="項"
@@ -782,7 +906,7 @@ const BulkEdit: React.FC = () => {
                               type="number" 
                               id="clause_id" 
                               name="clause_id"
-                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                               value={article.clause_id}
                               onChange={(e) => handleInputChange(article.uuid, e)}
                               placeholder="款"
@@ -795,7 +919,7 @@ const BulkEdit: React.FC = () => {
                               type="number" 
                               id="item_id" 
                               name="item_id"
-                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                               value={article.item_id}
                               onChange={(e) => handleInputChange(article.uuid, e)}
                               placeholder="目"
@@ -808,7 +932,7 @@ const BulkEdit: React.FC = () => {
                               type="number" 
                               id="sub_item_id" 
                               name="sub_item_id"
-                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                               value={article.sub_item_id}
                               onChange={(e) => handleInputChange(article.uuid, e)}
                               placeholder="目之○"
@@ -820,35 +944,49 @@ const BulkEdit: React.FC = () => {
                               type="text"
                               id="content"
                               name="content"
-                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
+                              className={`bg-gray-50 border ${isDuplicateArticle ? 'border-red-300' : isModified ? 'border-orange-300' : 'border-gray-300'} text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5`}
                               value={article.content}
                               onChange={(e) => handleInputChange(article.uuid, e)}
                               placeholder="條文內容"
                             />
                           </div>
-                          {hoveredIndex === index && (
-                            <>
-                              <button
-                                type="button"
-                                className="bg-red-500 text-white px-4 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
-                                onClick={() => handleRemoveRow(index!, article?.uuid)}
-                              >
-                                刪除
-                              </button>
-                              <button
-                                className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
-                                onClick={() => handleInsertAbove(index)}
-                              >
-                                向上插入
-                              </button>
-                              <button
-                                className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
-                                onClick={() => handleInsertBelow(index)}
-                              >
-                                向下插入
-                              </button>
-                            </>
-                          )}
+                          <div 
+                            className="relative flex items-center gap-2"
+                          >
+                            {hoveredIndex === index && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="bg-red-500 text-white px-4 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
+                                  onClick={() => handleRemoveRow(index!, article?.uuid)}
+                                >
+                                  刪除
+                                </button>
+                                <button
+                                  className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
+                                  onClick={() => handleInsertAbove(index)}
+                                >
+                                  向上插入
+                                </button>
+                                <button
+                                  className="bg-blue-500 text-white px-2 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
+                                  onClick={() => handleInsertBelow(index)}
+                                >
+                                  向下插入
+                                </button>
+                              {isModified && modifiedFields.length > 0 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleRestore(article)}
+                                  className="bg-orange-500 text-white px-4 py-2 rounded-md text-sm opacity-70 hover:opacity-100"
+                                  title="復原到修改前狀態"
+                                >
+                                  復原
+                                </button>
+                              )}
+                              </>
+                            )}
+                          </div>
                           {isDuplicateArticle && (
                             <div className="text-red-500 text-sm ml-2 flex items-center">
                               警告：此條文編號與其他條文重複
