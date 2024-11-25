@@ -318,7 +318,34 @@ const BulkEdit: React.FC = () => {
     setBulkEditMode(true);
     // 將所有資料轉換為純文字格式
     const textData = tempArticles
-      .sort((a, b) => a.id > b.id ? 1 : -1)
+      .sort((a, b) => {
+        // 依序比较各个层级
+        if ((a.code ?? 0) !== (b.code ?? 0)) {
+          return (a.code ?? 0) - (b.code ?? 0);
+        }
+        if ((a.chapter_id ?? 0) !== (b.chapter_id ?? 0)) {
+          return (a.chapter_id ?? 0) - (b.chapter_id ?? 0);
+        }
+        if ((a.article_id ?? 0) !== (b.article_id ?? 0)) {
+          return (a.article_id ?? 0) - (b.article_id ?? 0);
+        }
+        if ((a.sub_article_id ?? 0) !== (b.sub_article_id ?? 0)) {
+          return (a.sub_article_id ?? 0) - (b.sub_article_id ?? 0);
+        }
+        if ((a.section_id ?? 0) !== (b.section_id ?? 0)) {
+          return (a.section_id ?? 0) - (b.section_id ?? 0);
+        }
+        if ((a.clause_id ?? 0) !== (b.clause_id ?? 0)) {
+          return (a.clause_id ?? 0) - (b.clause_id ?? 0);
+        }
+        if ((a.item_id ?? 0) !== (b.item_id ?? 0)) {
+          return (a.item_id ?? 0) - (b.item_id ?? 0);
+        }
+        if ((a.sub_item_id ?? 0) !== (b.sub_item_id ?? 0)) {
+          return (a.sub_item_id ?? 0) - (b.sub_item_id ?? 0);
+        }
+        return 0;
+      })
       .map(article => {
         const fields = [
           article.uuid,
