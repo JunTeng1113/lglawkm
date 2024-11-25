@@ -427,7 +427,7 @@ const BulkEdit: React.FC = () => {
         alert('更新過程中發生錯誤');
       }
     } catch (error) {
-      alert('批量編輯格式錯誤，請檢查輸入格式');
+      alert('格式錯誤，請檢查輸入格式');
       console.error('Bulk edit error:', error);
     }
   };
@@ -541,7 +541,7 @@ const BulkEdit: React.FC = () => {
   // 新增切換編輯模式的處理函數
   const toggleBulkEditMode = () => {
     if (bulkEditMode) {
-      // 從批量編輯模式切換回一般模式
+      // 從純文字模式切換回一般模式
       try {
         const rows = bulkEditText.split('\n').filter(row => row.trim());
         const newArticles = rows.map(row => {
@@ -583,7 +583,7 @@ const BulkEdit: React.FC = () => {
 
         setTempArticles(articlesWithIds);
       } catch (error) {
-        alert('批量編輯格式錯誤，無法切換回一般模式');
+        alert('格式錯誤，無法切換回一般模式');
         console.error('Error parsing bulk edit text:', error);
         return; // 如果解析失敗，不切換模式
       }
@@ -698,7 +698,7 @@ const BulkEdit: React.FC = () => {
         >
           返回法規管理
         </button>
-        <h1>批量編輯</h1>
+        <h1>純文字模式</h1>
         <div className="flex items-center gap-3">
           <label className="inline-flex items-center cursor-pointer">
             <input
@@ -726,7 +726,7 @@ const BulkEdit: React.FC = () => {
             onClick={bulkEditMode ? toggleBulkEditMode : handleBulkEdit}
             className="bg-purple-500 text-white px-4 py-2 rounded"
           >
-            {bulkEditMode ? '返回一般模式' : '批量編輯'}
+            {bulkEditMode ? '返回一般模式' : '切換純文字模式'}
           </button>
         </div>
       </div>
