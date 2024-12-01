@@ -5,7 +5,7 @@ require('dotenv').config();
 let db;
 
 // 使用 process.env.DEV 來判斷環境
-if (process.env.DEV === 'TRUE') {
+if (true) {
   // 開發環境使用 SQLite
   const dbPath = path.resolve(__dirname, 'db/my-database.db');
   console.log('Using SQLite database at:', dbPath);

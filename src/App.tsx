@@ -1,20 +1,31 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { AuthProvider } from './contexts/AuthContext';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/Login';
 import RegulationManager from './RegulationManager';
 import BulkEdit from './AddArticleForm';
-import SelectLaw from './SelectLaw';
 import RegulationView from './RegulationView';
 
-const App: React.FC = () => {
+const App = () => {
   return (
-    <Router>
-      <Routes>
-        <Route path="/select-law" element={<SelectLaw />} />
-        <Route path="/regulation/:regulation_number" element={<RegulationView />} />
-        <Route path="/" element={<RegulationManager />} />
-        <Route path="/bulk-edit/:regulationId" element={<BulkEdit />} />
-      </Routes>
-    </Router>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={
+              <RegulationManager />
+          } />
+          <Route path="/bulk-edit/:id" element={
+            <ProtectedRoute requiredRole="admin">
+              <BulkEdit />
+            </ProtectedRoute>
+          } />
+          <Route path="/regulation/:regulation_number" element={
+            <RegulationView />
+          } />
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 };
 

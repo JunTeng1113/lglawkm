@@ -4,6 +4,8 @@ const router = express.Router();
 
 const db = require('../dbConfig');
 
+const verifyToken = require('../middleware/auth');
+
 // Endpoint to fetch regulation and articles
 router.get('/regulations', (req, res) => {
   const lawNumber = req.query.law_number ? req.query.law_number : undefined;
@@ -73,7 +75,7 @@ router.get('/regulations', (req, res) => {
 });
 
 // 新增法規
-router.post('/regulations/create', (req, res) => {
+router.post('/regulations/create', verifyToken, (req, res) => {
   const { regulation_name, competent_authority, updated_at } = req.body;
   
   db.run(
@@ -89,7 +91,7 @@ router.post('/regulations/create', (req, res) => {
 });
 
 // 更新法規
-router.put('/regulations/update', (req, res) => {
+router.put('/regulations/update', verifyToken, (req, res) => {
   const { regulation_number, regulation_name, competent_authority, updated_at } = req.body;
   
   db.run(
