@@ -27,10 +27,12 @@ function SelectLaw() {
   const [chaptersToShow, setChaptersToShow] = useState<Set<number>>(new Set());
   const [searchKeyword, setSearchKeyword] = useState<string>('');
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
   async function fetchArticles() {
     try {
       // Fetch the regulation name for law_number 0
-      const regResponse = await fetch('http://localhost:3000/api/regulations');
+      const regResponse = await fetch(`${API_URL}/api/regulations`);
       const regResult = await regResponse.json();
 
       // 搜尋功能

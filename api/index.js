@@ -8,7 +8,8 @@ const deleteArticle = require('./routes/DeleteArticle');
 const regulations = require('./routes/regulations');
 const path = require('path');
 
-const envFile = process.env.DEV === 'TRUE' ? '.env.dev' : '.env.production';
+// const envFile = process.env.DEV === 'TRUE' ? '.env.dev' : '.env.production';
+const envFile = '.env.dev'
 
 // 確保在最開始就載入環境變量
 require('dotenv').config({ 

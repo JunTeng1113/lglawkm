@@ -21,6 +21,8 @@ interface Regulation {
   articles: Article[];
 }
 
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 function RegulationView() {
   const { regulation_number } = useParams();
   const [regulation, setRegulation] = useState<Regulation | null>(null);
@@ -28,7 +30,7 @@ function RegulationView() {
   useEffect(() => {
     async function fetchRegulation() {
       try {
-        const regResponse = await fetch(`http://localhost:3000/api/regulations?law_number=${regulation_number}`);
+        const regResponse = await fetch(`${API_URL}/api/regulations?law_number=${regulation_number}`);
         const regulations = await regResponse.json();
         
         if (regulations && regulations.articles) {

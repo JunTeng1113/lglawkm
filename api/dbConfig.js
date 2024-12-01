@@ -1,6 +1,14 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
-require('dotenv').config();
+
+
+// const envFile = process.env.DEV === 'TRUE' ? '.env.dev' : '.env.production';
+const envFile = '.env.dev'
+
+// 確保在最開始就載入環境變量
+require('dotenv').config({ 
+  path: path.resolve(__dirname, '..', envFile)
+});
 
 let db;
 
